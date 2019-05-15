@@ -21,14 +21,20 @@ chmod u+x cjv.py
 General syntax is:
 
 ```
-./cjv.py /path/to/versionedCityJson.json <command> [<args>]
+./cjv.py versionedCityJson.json <command> [<args>]
 ```
 
 The command can be:
-- ``log`` without arguments, or
+- ``log`` with one optional argument: ``<ref>``, or
 - ``checkout`` with two arguments: ``<version_name> <output_cityjson>``.
 
 ## Examples
+
+You can show the log of ``master`` branch:
+
+```
+./cjv.py Examples/buildingBeforeAndAfter.json log master
+```
 
 You can checkout a version to a regular CityJSON as follows:
 

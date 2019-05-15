@@ -19,7 +19,7 @@ minimal_json = "{\
   \"CityObjects\": {}\
 }"
 
-def show_history(cm):
+def show_history(cm, ref="master"):
     # Isolate the versioning property
     versioning = cm["versioning"]
     
@@ -29,47 +29,62 @@ def show_history(cm):
     # Check if versions are present in the file
     if version_count > 0:
         print("Found %s%d%s versions.\n" % (Fore.GREEN, len(versioning["versions"]), Style.RESET_ALL))
-
-        # Iterate through every version
-        for version_name, version_data in versioning["versions"].items():
-            print(Fore.YELLOW + "version %s" % version_name, end='')
-            for branch_name, branch_ref in versioning["branches"].items():
-                if branch_ref == version_name:
-                    print(' (' + Fore.CYAN + branch_name + Fore.YELLOW + ')', end='')
-            for tag_name, tag_ref in versioning["tags"].items():
-                if tag_ref == version_name:
-                    print(' (' + Fore.MAGENTA + 'tag: %s' % tag_name + Fore.YELLOW + ')', end='')
-            print(Style.RESET_ALL)
-
-            print("Author: %s" % version_data["author"])
-            print("Date: %s" % version_data["date"])
-
-            print("Message:\n\n" + Fore.CYAN + "%s\n" % version_data["message"] + Style.RESET_ALL)
-
-            print("This is what changed in this version:")
-
-            # If there is a previous version, output the differences
-            if "parents" in version_data:
-                current_version = versioning["versions"][version_name]
-                previous_version = versioning["versions"][version_data["parents"][0]] # For now, assume only one parent
-
-                # Find differences between the two versions
-                new_objects = set(current_version["objects"]) - set(previous_version["objects"])
-                old_objects = set(previous_version["objects"]) - set(current_version["objects"])
-                same_objects = set(current_version["objects"]).intersection(set(previous_version["objects"]))
-
-                for obj in new_objects:
-                    print(Fore.GREEN + " + %s" % obj)
-                for obj in old_objects:
-                    print(Fore.RED + " - %s" % obj)
-                for obj in same_objects:
-                    print(Fore.WHITE + " ~ %s" % obj)
-                print(Style.RESET_ALL)
-            else:
-                for obj in version_data["objects"]:
-                    print(Fore.GREEN + " + %s" % obj)
     else:
         print("No versions found. Doei!")
+        return
+    
+    # Find the requested ref
+    version_name = None
+    if ref in versioning["versions"]:
+        version_name = ref
+    elif ref in versioning["branches"]:
+        version_name = versioning["branches"][ref]
+    elif ref in versioning["tags"]:
+        version_name = versioning["tags"][ref]
+
+    # Iterate through versions starting from version_name
+    while version_name != None:
+        current_version = versioning["versions"][version_name]
+
+        print(Fore.YELLOW + "version %s" % version_name, end='')
+        for branch_name, branch_ref in versioning["branches"].items():
+            if branch_ref == version_name:
+                print(' (' + Fore.CYAN + branch_name + Fore.YELLOW + ')', end='')
+        for tag_name, tag_ref in versioning["tags"].items():
+            if tag_ref == version_name:
+                print(' (' + Fore.MAGENTA + 'tag: %s' % tag_name + Fore.YELLOW + ')', end='')
+        print(Style.RESET_ALL)
+
+        print("Author: %s" % current_version["author"])
+        print("Date: %s" % current_version["date"])
+
+        print("Message:\n\n" + Fore.CYAN + "%s\n" % current_version["message"] + Style.RESET_ALL)
+
+        print("This is what changed in this version:")
+
+        # If there is a previous version, output the differences
+        if "parents" in current_version:
+            previous_version = versioning["versions"][current_version["parents"][0]] # For now, assume only one parent
+
+            # Find differences between the two versions
+            new_objects = set(current_version["objects"]) - set(previous_version["objects"])
+            old_objects = set(previous_version["objects"]) - set(current_version["objects"])
+            same_objects = set(current_version["objects"]).intersection(set(previous_version["objects"]))
+
+            for obj in new_objects:
+                print(Fore.GREEN + " + %s" % obj)
+            for obj in old_objects:
+                print(Fore.RED + " - %s" % obj)
+            for obj in same_objects:
+                print(Fore.WHITE + " ~ %s" % obj)
+            print(Style.RESET_ALL)
+
+            version_name = current_version["parents"][0]
+        else:
+            for obj in current_version["objects"]:
+                print(Fore.GREEN + " + %s" % obj)
+            
+            version_name = None
 
 def extract_version(cm, version_name, output_filename):
     versioning = cm["versioning"]
@@ -92,18 +107,18 @@ def extract_version(cm, version_name, output_filename):
 
 # THE SCRIPT STARTS HERE
 
-if len(sys.argv) < 3:
-    print("Please provide a command.")
-    quit()
-
-command = sys.argv[2]
-
 if len(sys.argv) < 2:
     print("Please provide a (versioned) CityJSON file")
     quit()
 
 # The filename of the CityJSON file to be analysed
 versioned_filename = sys.argv[1]
+
+if len(sys.argv) < 3:
+    print("Please provide a command.")
+    quit()
+
+command = sys.argv[2]
 
 print("Opening %s..." % versioned_filename)
 
@@ -121,7 +136,11 @@ if "versioning" not in citymodel:
     quit()
 
 if command == "log":
-    show_history(citymodel)
+    if len(sys.argv) > 3:
+        ref = sys.argv[3]
+    else:
+        ref = "master"
+    show_history(citymodel, ref)
 elif command == "extract":
     if len(sys.argv) < 5:
         print("The 'extract' command needs a version and an output filename!")
