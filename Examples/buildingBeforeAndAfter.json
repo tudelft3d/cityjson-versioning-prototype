@@ -1,0 +1,89 @@
+{
+  "type": "CityJSON",
+  "version": "1.0",
+  "extensions": {},
+  "metadata": {},
+  "transform": {
+    "scale": [],
+    "translate": []
+  },
+  "CityObjects": {
+    "building01-01": {
+      "type": "Building",
+      "name": "building01",
+      "attributes": {
+        "storeysAboveGround": 1,
+        "storeysBelowGround": 0,
+        "yearOfConstruction": 1973,
+        "owner": "Bilbo Baggins",
+        "creationDate": "2019-01-01"
+      },
+      "address": {
+      "CountryName": "Eriador",
+      "LocalityName": "The Shire",
+      "ThoroughfareNumber": "1",
+      "ThoroughfareName": "Bag End",
+      "PostalCode": "4DV3N TUR3"
+      },
+      "bbox": [ 84710.1, 446846.0, -5.3, 84757.1, 446944.0, 40.9 ]
+    },
+    "building01-02": {
+        "type": "Building",
+        "name": "building01",
+        "attributes": {
+          "storeysAboveGround": 2,
+          "storeysBelowGround": 1,
+          "yearOfConstruction": 1973,
+          "owner": "Frodo Baggins",
+          "creationDate": "2019-01-01",
+          "updateDate:": "2019-02-02"
+        },
+        "address": {
+        "CountryName": "Eriador",
+        "LocalityName": "The Shire",
+        "ThoroughfareNumber": "1",
+        "ThoroughfareName": "Bag End",
+        "PostalCode": "4DV3N TUR3"
+        },
+        "bbox": [ 84710.1, 446846.0, -5.3, 84757.1, 446944.0, 40.9 ]
+    }
+  },
+  "versioning": {
+    "versions": {
+      "v30": {
+        "author": "J.R.R. Tolkien",
+        "date": "2019-03-04T18:34:12.24Z",
+        "message": "Remove building01",
+        "parents": ["v29"],
+        "objects": [
+        ]
+      },
+      "v29": {
+        "author": "J.R.R. Tolkien",
+        "date": "2019-02-04T11:00:17.58Z",
+        "message": "Change ownership and structure of building01",
+        "parents": ["v28"],
+        "objects": [
+          "building01-02"
+        ]
+      },
+      "v28": {
+        "author": "J.R.R. Tolkien",
+        "date": "2019-01-02T13:20:21.50Z",
+        "message": "Add Baggins' new building",
+        "objects": [
+          "building01-01"
+        ]
+      }
+    },
+    "tags": {
+      "release-2019": "v30"
+    },
+    "branches": {
+      "master": "v30"
+    }
+  },
+  "vertices": [],
+  "appearance": {},
+  "geometry-templates": {}
+}
