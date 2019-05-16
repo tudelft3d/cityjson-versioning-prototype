@@ -17,7 +17,7 @@ minimal_json = "{\
 }"
 
 class LogCommand:
-    def __init__(self, citymodel, ref="master", **args):
+    def __init__(self, citymodel, ref="master"):
         self._citymodel = citymodel
         self._ref = ref
     
@@ -100,6 +100,18 @@ class LogCommand:
                 for obj in current_version["objects"]:
                     print(Fore.GREEN + " + %s" % obj)
 
+class LogCommandBuilder:
+    def __init__(self):
+        self._instance = None
+    
+    def __call__(self, vcitymodel, args, **kwargs):
+        if len(args) > 3:
+            ref = args[3]
+        else:
+            ref = "master"
+        self._instance = LogCommand(vcitymodel, ref)
+        return self._instance
+
 class CheckoutCommand:
     def __init__(self, citymodel, version_name, output_file, **args):
         self._citymodel = citymodel
@@ -129,23 +141,33 @@ class CheckoutCommand:
         with open(output_file, "w") as outfile:
             json.dump(new_model, outfile)
 
+class CheckoutCommandBuilder:
+    def __init__(self):
+        self._instance = None
+    
+    def __call__(self, vcitymodel, args, **kwargs):
+        version_name = args[3]
+        output_file = args[4]
+        self._instance = CheckoutCommand(vcitymodel, version_name, output_file)
+        return self._instance
+
 class CommandFactory:
     """A factory to create commands from their names"""
 
     def __init__(self):
-        self._commands = {}
+        self._builders = {}
     
-    def register_command(self, command_name, command):
+    def register_builder(self, command_name, builder):
         """Registers a new command with the given name"""
-        self._commands[command_name] = command
+        self._builders[command_name] = builder
     
-    def get_command(self, command_name, **args):
+    def create_command(self, command_name, **args):
         """Get the command from a given name"""
-        command = self._commands.get(command_name)
-        if not command:
+        command_builder = self._builders.get(command_name)
+        if not command_builder:
             ValueError(command_name)
-        return command(**args)
+        return command_builder(**args)
 
 factory = CommandFactory()
-factory.register_command("log", LogCommand)
-factory.register_command("checkout", CheckoutCommand)
+factory.register_builder("log", LogCommandBuilder())
+factory.register_builder("checkout", CheckoutCommandBuilder())

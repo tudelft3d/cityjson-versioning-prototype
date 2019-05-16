@@ -34,20 +34,14 @@ if __name__ == "__main__":
     cityjson_data.close()
 
     args = {}
-    args["citymodel"] = citymodel
+    args["vcitymodel"] = citymodel
+    args["args"] = sys.argv
 
     if "versioning" not in citymodel:
         print(Fore.RED + "The file provided is not a versioned CityJSON!")
         quit()
-
-    if command_name == "log": 
-        if len(sys.argv) > 3:
-            args["ref"] = sys.argv[3]
-    elif command_name == "checkout":
-        args["version_name"] = sys.argv[3]
-        args["output_file"] = sys.argv[4]
     
-    command = commands.factory.get_command(command_name, **args)
+    command = commands.factory.create_command(command_name, **args)
     
     if command == None:
         print("'%s' is not a valid command. Please try one of: log." % command)
