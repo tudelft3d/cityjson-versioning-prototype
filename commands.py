@@ -16,6 +16,41 @@ minimal_json = "{\
   \"CityObjects\": {}\
 }"
 
+def print_version(version_name, version, branches, tags):
+    print(Fore.YELLOW + "version %s" % version_name, end='')
+    for branch in branches:
+        print(' (' + Fore.CYAN + branch + Fore.YELLOW + ')', end='')
+    for tag in tags:
+        print(' (' + Fore.MAGENTA + 'tag: %s' % tag + Fore.YELLOW + ')', end='')
+    print(Style.RESET_ALL)
+
+    print("Author: %s" % version["author"])
+    print("Date: %s" % version["date"])
+
+    print("Message:\n\n" + Fore.CYAN + "%s\n" % version["message"] + Style.RESET_ALL)
+
+def print_diff_of_versions(new_version, old_version):
+    # Find differences between the two versions
+    new_objects = set(new_version["objects"]) - set(old_version["objects"])
+    old_objects = set(old_version["objects"]) - set(new_version["objects"])
+    same_objects = set(new_version["objects"]).intersection(set(old_version["objects"]))
+
+    for obj in new_objects:
+        print(Fore.GREEN + " + %s" % obj)
+    for obj in old_objects:
+        print(Fore.RED + " - %s" % obj)
+    for obj in same_objects:
+        print(Fore.WHITE + " ~ %s" % obj)
+    print(Style.RESET_ALL)
+
+def find_version_from_ref(ref, versioning):
+    if ref in versioning["versions"]:
+        return ref
+    elif ref in versioning["branches"]:
+        return versioning["branches"][ref]
+    elif ref in versioning["tags"]:
+        return versioning["tags"][ref]
+
 class LogCommand:
     def __init__(self, citymodel, ref="master"):
         self._citymodel = citymodel
@@ -44,12 +79,7 @@ class LogCommand:
         next_versions = []
 
         # Find the requested ref
-        if ref in versioning["versions"]:
-            next_versions.append(ref)
-        elif ref in versioning["branches"]:
-            next_versions.append(versioning["branches"][ref])
-        elif ref in versioning["tags"]:
-            next_versions.append(versioning["tags"][ref])
+        next_versions.append(find_version_from_ref(ref, versioning))
 
         # Iterate through versions while there are next_versions to check
         while len(next_versions) > 0:
@@ -63,21 +93,17 @@ class LogCommand:
             current_version = versioning["versions"][version_name]
             next_versions.remove(version_name)
 
-            print(Fore.YELLOW + "version %s" % version_name, end='')
+            branches = []
             for branch_name, branch_ref in versioning["branches"].items():
                 if branch_ref == version_name:
-                    print(' (' + Fore.CYAN + branch_name + Fore.YELLOW + ')', end='')
+                    branches.append(branch_name)
+            
+            tags = []
             for tag_name, tag_ref in versioning["tags"].items():
                 if tag_ref == version_name:
-                    print(' (' + Fore.MAGENTA + 'tag: %s' % tag_name + Fore.YELLOW + ')', end='')
-            print(Style.RESET_ALL)
+                    tags.append(tag_name)
 
-            print("Author: %s" % current_version["author"])
-            print("Date: %s" % current_version["date"])
-
-            print("Message:\n\n" + Fore.CYAN + "%s\n" % current_version["message"] + Style.RESET_ALL)
-
-            print("This is what changed in this version:")
+            print_version(version_name, current_version, branches, tags)
 
             # If there is a previous version, output the differences
             if "parents" in current_version:
@@ -88,22 +114,12 @@ class LogCommand:
                 next_versions.extend(new_versions)
 
                 previous_version = versioning["versions"][current_version["parents"][0]] # For now, assume only one parent
-
-                # Find differences between the two versions
-                new_objects = set(current_version["objects"]) - set(previous_version["objects"])
-                old_objects = set(previous_version["objects"]) - set(current_version["objects"])
-                same_objects = set(current_version["objects"]).intersection(set(previous_version["objects"]))
-
-                for obj in new_objects:
-                    print(Fore.GREEN + " + %s" % obj)
-                for obj in old_objects:
-                    print(Fore.RED + " - %s" % obj)
-                for obj in same_objects:
-                    print(Fore.WHITE + " ~ %s" % obj)
-                print(Style.RESET_ALL)
             else:
-                for obj in current_version["objects"]:
-                    print(Fore.GREEN + " + %s" % obj)
+                previous_version = {}
+                previous_version["objects"] = []
+
+            print_diff_of_versions(current_version, previous_version)
+                
 
 class LogCommandBuilder:
     def __init__(self):
