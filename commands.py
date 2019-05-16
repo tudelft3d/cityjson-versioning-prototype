@@ -17,6 +17,7 @@ minimal_json = "{\
 }"
 
 def print_version(version_name, version, branches, tags):
+    """Prints a description of a version to the terminal"""
     print(Fore.YELLOW + "version %s" % version_name, end='')
     for branch in branches:
         print(' (' + Fore.CYAN + branch + Fore.YELLOW + ')', end='')
@@ -30,6 +31,7 @@ def print_version(version_name, version, branches, tags):
     print("Message:\n\n" + Fore.CYAN + "%s\n" % version["message"] + Style.RESET_ALL)
 
 def print_diff_of_versions(new_version, old_version):
+    """Prints a diff of two versions to the terminal"""
     # Find differences between the two versions
     new_objects = set(new_version["objects"]) - set(old_version["objects"])
     old_objects = set(old_version["objects"]) - set(new_version["objects"])
@@ -44,6 +46,7 @@ def print_diff_of_versions(new_version, old_version):
     print(Style.RESET_ALL)
 
 def find_version_from_ref(ref, versioning):
+    """Returns the version name related to a ref"""
     if ref in versioning["versions"]:
         return ref
     elif ref in versioning["branches"]:
