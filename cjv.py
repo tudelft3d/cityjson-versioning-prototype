@@ -44,7 +44,7 @@ if __name__ == "__main__":
     command = commands.factory.create_command(command_name, **args)
     
     if command == None:
-        print("'%s' is not a valid command. Please try one of: log." % command)
+        print("'%s' is not a valid command. Please try one of: %s." % (command_name, ', '.join([v for v in commands.factory.list_commands()])))
         quit()
 
     command.execute()
