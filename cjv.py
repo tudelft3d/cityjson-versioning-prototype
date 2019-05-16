@@ -33,18 +33,27 @@ def show_history(cm, ref="master"):
         print("No versions found. Doei!")
         return
     
-    # Find the requested ref
-    version_name = None
-    if ref in versioning["versions"]:
-        version_name = ref
-    elif ref in versioning["branches"]:
-        version_name = versioning["branches"][ref]
-    elif ref in versioning["tags"]:
-        version_name = versioning["tags"][ref]
+    next_versions = []
 
-    # Iterate through versions starting from version_name
-    while version_name != None:
+    # Find the requested ref
+    if ref in versioning["versions"]:
+        next_versions.append(ref)
+    elif ref in versioning["branches"]:
+        next_versions.append(versioning["branches"][ref])
+    elif ref in versioning["tags"]:
+        next_versions.append(versioning["tags"][ref])
+
+    # Iterate through versions while there are next_versions to check
+    while len(next_versions) > 0:
+        # Find latest version
+        latest_date = versioning["versions"][next_versions[0]]["date"]
+        for candidate in next_versions:
+            if latest_date <= versioning["versions"][candidate]["date"]:
+                latest_date = versioning["versions"][candidate]["date"]
+                version_name = candidate
+        
         current_version = versioning["versions"][version_name]
+        next_versions.remove(version_name)
 
         print(Fore.YELLOW + "version %s" % version_name, end='')
         for branch_name, branch_ref in versioning["branches"].items():
@@ -64,6 +73,7 @@ def show_history(cm, ref="master"):
 
         # If there is a previous version, output the differences
         if "parents" in current_version:
+            next_versions.extend(current_version["parents"])
             previous_version = versioning["versions"][current_version["parents"][0]] # For now, assume only one parent
 
             # Find differences between the two versions
@@ -78,14 +88,10 @@ def show_history(cm, ref="master"):
             for obj in same_objects:
                 print(Fore.WHITE + " ~ %s" % obj)
             print(Style.RESET_ALL)
-
-            version_name = current_version["parents"][0]
         else:
             for obj in current_version["objects"]:
                 print(Fore.GREEN + " + %s" % obj)
             
-            version_name = None
-
 def extract_version(cm, version_name, output_filename):
     versioning = cm["versioning"]
     if version_name not in versioning["versions"]:
