@@ -175,6 +175,40 @@ class CheckoutCommandBuilder:
         self._instance = CheckoutCommand(vcitymodel, version_name, output_file)
         return self._instance
 
+class DiffCommand:
+    def __init__(self, citymodel, new_version, old_version, **args):
+        self._citymodel = citymodel
+        self._new_version = new_version
+        self._old_version = old_version
+
+    def execute(self):
+        cm = self._citymodel
+        new_version = self._new_version
+        old_version = self._old_version
+
+        versioning = cm["versioning"]
+
+        new_version = find_version_from_ref(new_version, versioning)
+        old_version = find_version_from_ref(old_version, versioning)
+
+        print("This is the diff between %s and %s" % (new_version, old_version))
+
+        print_diff_of_versions(versioning["versions"][new_version], versioning["versions"][old_version])
+
+class DiffCommandBuilder:
+    def __init__(self):
+        self._instance = None
+    
+    def __call__(self, vcitymodel, args, **kwargs):
+        if len(args) < 5:
+            print("Not enough arguments: we need two versions for this!")
+            return None
+
+        new_version = args[3]
+        old_version = args[4]
+        self._instance = DiffCommand(vcitymodel, new_version, old_version)
+        return self._instance
+
 class CommandFactory:
     """A factory to create commands from their names"""
 
@@ -191,7 +225,11 @@ class CommandFactory:
         if not command_builder:
             ValueError(command_name)
         return command_builder(**args)
+    
+    def list_commands(self):
+        return self._builders.keys()
 
 factory = CommandFactory()
 factory.register_builder("log", LogCommandBuilder())
 factory.register_builder("checkout", CheckoutCommandBuilder())
+factory.register_builder("diff", DiffCommandBuilder())
