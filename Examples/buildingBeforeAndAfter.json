@@ -54,7 +54,7 @@
         "author": "J.R.R. Tolkien",
         "date": "2019-03-04T18:34:12.24Z",
         "message": "Remove building01",
-        "parents": ["v29"],
+        "parents": ["v29", "branch"],
         "objects": [
         ]
       },
@@ -67,6 +67,14 @@
           "building01-02"
         ]
       },
+      "branch": {
+        "author": "J.R.R. Tolkien",
+        "date": "2019-02-08T18:34:12.24Z",
+        "message": "This is from another branch",
+        "parents": ["v28"],
+        "objects": [
+        ]
+      },
       "v28": {
         "author": "J.R.R. Tolkien",
         "date": "2019-01-02T13:20:21.50Z",
@@ -77,7 +85,7 @@
       }
     },
     "tags": {
-      "release-2019": "v30"
+      "release-2019": "v29"
     },
     "branches": {
       "master": "v30"
