@@ -81,7 +81,12 @@ class LogCommand:
 
             # If there is a previous version, output the differences
             if "parents" in current_version:
-                next_versions.extend(current_version["parents"])
+                # Find only new versions from parents of the current commit
+                new_versions = list(set(current_version["parents"]) - set(next_versions))
+
+                # Add new versions for the future
+                next_versions.extend(new_versions)
+
                 previous_version = versioning["versions"][current_version["parents"][0]] # For now, assume only one parent
 
                 # Find differences between the two versions
