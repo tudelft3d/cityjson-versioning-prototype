@@ -133,6 +133,10 @@ class CheckoutCommand:
         self._citymodel = citymodel
         self._version = version_name
         self._output = output_file
+        self._objectid_property = "cityobject_id"
+    
+    def set_objectid_property(self, property_name):
+        self._objectid_property = property_name
 
     def execute(self):
         cm = self._citymodel
@@ -153,7 +157,11 @@ class CheckoutCommand:
                 continue
 
             new_obj = cm["CityObjects"][obj_id]
-            new_model["CityObjects"][obj_id] = new_obj
+            if self._objectid_property != None:
+                new_id = new_obj[self._objectid_property]
+            else:
+                new_id = obj_id
+            new_model["CityObjects"][new_id] = new_obj
         with open(output_file, "w") as outfile:
             json.dump(new_model, outfile)
 
@@ -165,6 +173,11 @@ class CheckoutCommandBuilder:
         version_name = args[3]
         output_file = args[4]
         self._instance = CheckoutCommand(vcitymodel, version_name, output_file)
+        if len(args) > 5:
+            if args[5] == "--no-id-property":
+                self._instance.set_objectid_property(None)
+            else:
+                self._instance.set_objectid_property(args[5])
         return self._instance
 
 class DiffCommand:
@@ -194,7 +207,7 @@ class DiffCommandBuilder:
     def __call__(self, vcitymodel, args, **kwargs):
         if len(args) < 5:
             print("Not enough arguments: we need two versions for this!")
-            return None
+            raise ValueError("Two arguments needed")
 
         new_version = args[3]
         old_version = args[4]
