@@ -114,15 +114,7 @@ class LogCommand:
                 new_versions = list(set(current_version["parents"]) - set(next_versions))
 
                 # Add new versions for the future
-                next_versions.extend(new_versions)
-
-                previous_version = versioning["versions"][current_version["parents"][0]] # For now, assume only one parent
-            else:
-                previous_version = {}
-                previous_version["objects"] = []
-
-            print_diff_of_versions(current_version, previous_version)
-                
+                next_versions.extend(new_versions)                
 
 class LogCommandBuilder:
     def __init__(self):
