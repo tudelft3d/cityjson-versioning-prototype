@@ -159,6 +159,7 @@ class CheckoutCommand:
             new_obj = cm["CityObjects"][obj_id]
             if self._objectid_property != None:
                 new_id = new_obj[self._objectid_property]
+                del new_obj[self._objectid_property]
             else:
                 new_id = obj_id
             new_model["CityObjects"][new_id] = new_obj
