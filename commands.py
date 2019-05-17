@@ -2,6 +2,10 @@ import json
 from utils import *
 import networkx as nx
 
+# Code to have colors at the console output
+from colorama import init, Fore, Back, Style
+init()
+
 minimal_json = "{\
   \"type\": \"CityJSON\",\
   \"version\": \"1.0\",\
@@ -160,7 +164,7 @@ class DiffCommand:
         new_version = find_version_from_ref(new_version, versioning)
         old_version = find_version_from_ref(old_version, versioning)
 
-        print("This is the diff between %s and %s" % (new_version, old_version))
+        print("This is the diff between {commit_color}{new_version}{reset_style} and {commit_color}{old_version}{reset_style}".format(new_version=new_version, old_version=old_version, commit_color=Fore.YELLOW, reset_style=Style.RESET_ALL))
 
         print_diff_of_versions(versioning["versions"][new_version], versioning["versions"][old_version])
 
