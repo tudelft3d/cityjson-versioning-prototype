@@ -41,7 +41,11 @@ if __name__ == "__main__":
         print(Fore.RED + "The file provided is not a versioned CityJSON!")
         quit()
     
-    command = commands.factory.create_command(command_name, **args)
+    try:
+        command = commands.factory.create_command(command_name, **args)
+    except:
+        print("'%s' is not a valid command. Please try one of: %s." % (command_name, ', '.join([v for v in commands.factory.list_commands()])))
+        quit()
     
     if command == None:
         print("'%s' is not a valid command. Please try one of: %s." % (command_name, ', '.join([v for v in commands.factory.list_commands()])))
