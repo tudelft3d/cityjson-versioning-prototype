@@ -42,6 +42,8 @@ def find_version_from_ref(ref, versioning):
         return versioning["branches"][ref]
     elif ref in versioning["tags"]:
         return versioning["tags"][ref]
+    
+    raise KeyError("There is no {ref} in the file!".format(ref=ref))
 
 def get_hash_of_object(object):
     encoded = json.dumps(object).encode('utf-8')
