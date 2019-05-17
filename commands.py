@@ -1,5 +1,6 @@
 import json
 from utils import *
+import networkx as nx
 
 minimal_json = "{\
   \"type\": \"CityJSON\",\
@@ -174,6 +175,83 @@ class DiffCommandBuilder:
         self._instance = DiffCommand(vcitymodel, new_version, old_version)
         return self._instance
 
+class RehashCommand:
+    def __init__(self, citymodel, output_file, **args):
+        self._citymodel = citymodel
+        self._output = output_file
+    
+    def execute(self):
+        cm = self._citymodel
+
+        # To keep the mapping between old and new keys
+        keypairs = {}
+        ver_keypairs = {}
+        
+        print ("City Objects:")
+
+        # Re-hash the city objects
+        new_cityobjects = {}
+        for obj_key, obj in cm["CityObjects"].items():
+            #TODO Later we'll have to do that first for the second-layer objects and then for first ones
+            new_key = get_hash_of_object(obj)
+            print("{newkey} <- {oldkey}".format(newkey=new_key, oldkey=obj_key))
+            keypairs[obj_key] = new_key
+
+            new_cityobjects[new_key] = cm["CityObjects"][obj_key]
+        
+        print("Versions:")
+
+        # Build the DAG
+        dag = nx.DiGraph()
+        for branch, version in cm["versioning"]["branches"].items():
+            dag = build_dag_from_version(dag, cm["versioning"]["versions"], version)
+
+        new_versions = {}
+        sorted_keys = list(nx.topological_sort(dag))
+        for ver_key in sorted_keys:
+            version = cm["versioning"]["versions"][ver_key]
+            new_objects = []
+            for obj_key in version["objects"]:
+                new_objects.append(keypairs[obj_key])
+            version["objects"] = new_objects
+
+            if "parents" in version:
+                new_parents = []
+                for parent_key in version["parents"]:
+                    new_parents.append(ver_keypairs[parent_key])
+                version["parents"] = new_parents
+            
+            new_key = get_hash_of_object(version)
+            print("{newkey} <- {oldkey}".format(newkey=new_key, oldkey=ver_key))
+
+            new_versions[new_key] = version
+            ver_keypairs[ver_key] = new_key
+        
+        new_branches = {}
+        for branch, version in cm["versioning"]["branches"].items():
+            new_branches[branch] = ver_keypairs[version]
+        
+        new_tags = {}
+        for tag, version in cm["versioning"]["tags"].items():
+            new_tags[tag] = ver_keypairs[version]
+        
+        cm["CityObjects"] = new_cityobjects
+        cm["versioning"]["versions"] = new_versions
+        cm["versioning"]["branches"] = new_branches
+        cm["versioning"]["tags"] = new_tags
+
+        print("Saving as {0}...".format(self._output))
+        with open(self._output, "w") as outfile:
+            json.dump(cm, outfile)
+
+class RehashCommandBuilder:
+    def __init__(self):
+        self._instance = None
+    
+    def __call__(self, vcitymodel, args, **kwargs):
+        self._instance = RehashCommand(vcitymodel, args[3])
+        return self._instance
+
 class CommandFactory:
     """A factory to create commands from their names"""
 
@@ -188,7 +266,7 @@ class CommandFactory:
         """Get the command from a given name"""
         command_builder = self._builders.get(command_name)
         if not command_builder:
-            ValueError(command_name)
+            raise ValueError(command_name)
         return command_builder(**args)
     
     def list_commands(self):
@@ -198,3 +276,4 @@ factory = CommandFactory()
 factory.register_builder("log", LogCommandBuilder())
 factory.register_builder("checkout", CheckoutCommandBuilder())
 factory.register_builder("diff", DiffCommandBuilder())
+factory.register_builder("rehash", RehashCommandBuilder())

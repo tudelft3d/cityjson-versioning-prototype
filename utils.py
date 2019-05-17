@@ -58,7 +58,13 @@ def build_dag_from_version(G, versions, last_key):
         for parent in next_ver["parents"]:
             if not G.has_node(parent):
                 G = build_dag_from_version(G, versions, parent)
-            print("Add edge {0}-{1}".format(parent, next_key))
             G.add_edge(parent, next_key)
         
     return G
+
+def find_root(G, node):
+    if len(list(G.predecessors(node))) > 0:  #True if there is a predecessor, False otherwise
+        root = find_root(G,list(G.predecessors(node))[0])
+    else:
+        root = node
+    return root
