@@ -10,7 +10,7 @@
   "CityObjects": {
     "building01-01": {
       "type": "Building",
-      "name": "building01",
+      "cityobject_id": "building01",
       "attributes": {
         "storeysAboveGround": 1,
         "storeysBelowGround": 0,
@@ -29,7 +29,7 @@
     },
     "building01-02": {
         "type": "Building",
-        "name": "building01",
+        "cityobject_id": "building01",
         "attributes": {
           "storeysAboveGround": 2,
           "storeysBelowGround": 1,
@@ -54,7 +54,7 @@
         "author": "J.R.R. Tolkien",
         "date": "2019-03-04T18:34:12.24Z",
         "message": "Remove building01",
-        "parents": ["v29", "branch"],
+        "parents": ["v29", "branch-version"],
         "objects": [
         ]
       },
@@ -67,7 +67,7 @@
           "building01-02"
         ]
       },
-      "branch": {
+      "branch-version": {
         "author": "J.R.R. Tolkien",
         "date": "2019-02-08T18:34:12.24Z",
         "message": "This is from another branch",
@@ -88,7 +88,8 @@
       "release-2019": "v29"
     },
     "branches": {
-      "master": "v30"
+      "master": "v30",
+      "one-branch": "branch-version"
     }
   },
   "vertices": [],
