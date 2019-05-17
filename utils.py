@@ -26,13 +26,21 @@ def print_diff_of_versions(new_version, old_version):
     old_objects = set(old_version["objects"]) - set(new_version["objects"])
     same_objects = set(new_version["objects"]).intersection(set(old_version["objects"]))
 
-    for obj in new_objects:
-        print(Fore.GREEN + " + %s" % obj)
-    for obj in old_objects:
-        print(Fore.RED + " - %s" % obj)
-    for obj in same_objects:
-        print(Fore.WHITE + " ~ %s" % obj)
-    print(Style.RESET_ALL)
+    print("\nChanges:\n")
+
+    if len(new_objects):
+        print("{color}".format(color=Fore.GREEN), end='')
+        for obj in new_objects:
+            print("\tadded: {0}".format(obj))
+    if len(old_objects):
+        print("{color}".format(color=Fore.RED), end='')
+        for obj in old_objects:
+            print("\tdeleted: {0}".format(obj))
+    
+    if len(same_objects):
+        print("{color}\nNot changed:\n".format(color=Style.RESET_ALL))
+        for obj in same_objects:
+            print("\t{0}".format(obj))
 
 def find_version_from_ref(ref, versioning):
     """Returns the version name related to a ref"""
