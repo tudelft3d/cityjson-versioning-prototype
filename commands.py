@@ -100,16 +100,18 @@ class CheckoutCommand:
 
     def execute(self):
         cm = self._citymodel
-        version_name = self._version
+        ref = self._version
         output_file = self._output
 
         versioning = cm["versioning"]
-        if version_name not in versioning["versions"]:
-            print("There is no version '%s' in the provided versioned CityJSON" % version_name)
+        try:
+            version_name = find_version_from_ref(ref, versioning)
+        except:
+            print("There is no ref '%s' in the provided versioned CityJSON" % version_name)
             quit()
         
         new_model = json.loads(minimal_json)
-        print("Extracting version '%s':" % version_name)
+        print("Extracting version '%s'..." % version_name)
         version = versioning["versions"][version_name]
         for obj_id in version["objects"]:
             if obj_id not in cm["CityObjects"]:
@@ -125,6 +127,7 @@ class CheckoutCommand:
             new_model["CityObjects"][new_id] = new_obj
         with open(output_file, "w") as outfile:
             json.dump(new_model, outfile)
+        print("Done!")
 
 class CheckoutCommandBuilder:
     def __init__(self):
