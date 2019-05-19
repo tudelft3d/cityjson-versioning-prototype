@@ -53,6 +53,63 @@ def find_version_from_ref(ref, versioning):
     
     raise KeyError("There is no {ref} in the file!".format(ref=ref))
 
+def is_ref_branch(ref, versioning):
+    return ref in versioning["branches"]
+
+def load_cityjson(input_file):
+    print("Opening %s..." % input_file)
+
+    # Parse the CityJSON file through the json library
+    cityjson_data = open(input_file)
+    try:
+        citymodel = json.load(cityjson_data)
+    except:
+        print("Oops! This is not a valid JSON file!")
+        quit()
+    cityjson_data.close()
+
+    return citymodel
+
+def save_cityjson(citymodel, output_file):
+    with open(output_file, "w") as outfile:
+        json.dump(citymodel, outfile)
+
+def get_versioned_city_objects(cm, version_name):
+    """Returns the versioned city objects of a given version"""
+    new_objects = {}
+    version = cm["versioning"]["versions"][version_name]
+    for obj_id in version["objects"]:
+        if obj_id not in cm["CityObjects"]:
+            print("  Object '%s' not found! Skipping..." % obj_id)
+            continue
+
+        new_objects[obj_id] = cm["CityObjects"][obj_id]
+    
+    return new_objects
+
+def convert_to_regular_city_objects(v_city_objects, id_property_name="cityobject_id"):
+    """Converts versioned city objects to regular objects (by replacing their ids)"""
+    new_objects = {}
+    for obj_id, obj in v_city_objects.items():
+        if id_property_name != None:
+            new_id = obj[id_property_name]
+            del obj[id_property_name]
+        else:
+            new_id = obj_id
+        new_objects[new_id] = obj
+    
+    return new_objects
+
+def convert_to_versioned_city_objects(city_objects, id_property_name="cityobject_id"):
+    """Converts regular city objects to versioned"""
+    new_objects = {}
+    for obj_id, obj in city_objects.items():
+        new_id = get_hash_of_object(obj)
+        obj[id_property_name] = obj_id
+        new_objects[new_id] = obj
+    
+    return new_objects
+
 def get_hash_of_object(object):
     encoded = json.dumps(object).encode('utf-8')
     m = hashlib.new('sha1')

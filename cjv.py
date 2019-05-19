@@ -3,6 +3,7 @@
 import json
 import sys
 import commands
+import utils
 
 # Code to have colors at the console output
 from colorama import init, Fore, Back, Style
@@ -22,16 +23,7 @@ if __name__ == "__main__":
 
     command_name = sys.argv[2]
 
-    print("Opening %s..." % versioned_filename)
-
-    # Parse the CityJSON file through the json library
-    cityjson_data = open(versioned_filename)
-    try:
-        citymodel = json.load(cityjson_data)
-    except:
-        print("Oops! This is not a valid JSON file!")
-        quit()
-    cityjson_data.close()
+    citymodel = utils.load_cityjson(versioned_filename)
 
     args = {}
     args["vcitymodel"] = citymodel

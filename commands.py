@@ -1,6 +1,7 @@
 import json
 from utils import *
 import networkx as nx
+import datetime
 
 # Code to have colors at the console output
 from colorama import init, Fore, Back, Style
@@ -116,21 +117,12 @@ class CheckoutCommand:
         
         new_model = json.loads(minimal_json)
         print("Extracting version '%s'..." % version_name)
-        version = versioning["versions"][version_name]
-        for obj_id in version["objects"]:
-            if obj_id not in cm["CityObjects"]:
-                print("  Object '%s' not found! Skipping..." % obj_id)
-                continue
+        new_objects = get_versioned_city_objects(cm, version_name)
+        new_objects = convert_to_regular_city_objects(new_objects, self._objectid_property)
+        new_model["CityObjects"] = new_objects
 
-            new_obj = cm["CityObjects"][obj_id]
-            if self._objectid_property != None:
-                new_id = new_obj[self._objectid_property]
-                del new_obj[self._objectid_property]
-            else:
-                new_id = obj_id
-            new_model["CityObjects"][new_id] = new_obj
-        with open(output_file, "w") as outfile:
-            json.dump(new_model, outfile)
+        print("Saving {0}...".format(output_file))
+        save_cityjson(new_model, output_file)
         print("Done!")
 
 class CheckoutCommandBuilder:
@@ -259,6 +251,60 @@ class RehashCommandBuilder:
         self._instance = RehashCommand(vcitymodel, args[3])
         return self._instance
 
+class CommitCommand:
+    def __init__(self, vcitymodel, in_file, ref, author, message, output_file, **args):
+        self._vcitymodel = vcitymodel
+        self._input_file = in_file
+        self._ref = ref
+        self._author = author
+        self._message = message
+        self._output_file = output_file
+    
+    def execute(self):
+        vcm = self._vcitymodel
+        in_file = self._input_file
+
+        parent_versionid = find_version_from_ref(self._ref, vcm["versioning"])
+
+        new_citymodel = load_cityjson(in_file)
+
+        new_objects = convert_to_versioned_city_objects(new_citymodel["CityObjects"])
+
+        new_version = {
+            "author": self._author,
+            "date": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            "message": self._message,
+            "parents": [ parent_versionid ],
+            "objects": []
+        }
+
+        for new_id, new_obj in new_objects.items():
+            vcm["CityObjects"][new_id] = new_obj
+            new_version["objects"].append(new_id)
+        
+        new_versionid = get_hash_of_object(new_version)
+
+        vcm["versioning"]["versions"][new_versionid] = new_version
+        
+        if is_ref_branch(self._ref, vcm["versioning"]):
+            print("Updating {branch} to {commit}".format(branch=self._ref, commit=new_versionid))
+            vcm["versioning"]["branches"][self._ref] = new_versionid
+        
+        save_cityjson(vcm, self._output_file)
+
+class CommitCommandBuilder:
+    def __init__(self):
+        self._instance = None
+    
+    def __call__(self, vcitymodel, args, **kwargs):
+        in_file = args[3]
+        ref = args[4]
+        author = args[5]
+        message = args[6]
+        out_file = args[7]
+        self._instance = CommitCommand(vcitymodel, in_file, ref, author, message, out_file)
+        return self._instance
+
 class CommandFactory:
     """A factory to create commands from their names"""
 
@@ -284,3 +330,4 @@ factory.register_builder("log", LogCommandBuilder())
 factory.register_builder("checkout", CheckoutCommandBuilder())
 factory.register_builder("diff", DiffCommandBuilder())
 factory.register_builder("rehash", RehashCommandBuilder())
+factory.register_builder("commit", CommitCommandBuilder())
