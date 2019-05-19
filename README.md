@@ -24,9 +24,38 @@ General syntax is:
 ./cjv.py versionedCityJson.json <command> [<args>]
 ```
 
-The command can be:
-- ``log`` with one optional argument: ``<ref>``, or
-- ``checkout`` with two arguments: ``<version_name> <output_cityjson>``.
+The available commands are (a *ref* can be a *version*, *branch* or *tag*.
+):
+
+- ``log``, show the history of the project starting from a ``ref`` (default is ``master``):
+
+```
+./cjv.py vCityJson.json log [<ref>]
+```
+
+- ``checkout``, extracts a regular CityJSON from a specific version:
+
+```
+./cjv.py vCityJson.json checkout <ref> <output.json>
+```
+
+- ``diff``, shows the changes between two *refs*:
+
+```
+./cjv.py vCityJson.json diff <new_ref> <old_ref>
+```
+
+- ``commit``, adds a new version from a CityJSON (``input.json``) with ``base_version`` as parent:
+
+```
+./cjv.py vCityJson.json commit <input.json> <base_version> <author> <message> [<output.json>]
+```
+
+- ``rehash``, converts all city object and version ids to hash (SHA-1):
+
+```
+./cjv.py vCityJson.json rehash <output.json>
+```
 
 ## Examples
 
