@@ -23,6 +23,7 @@ if __name__ == "__main__":
 
     command_name = sys.argv[2]
 
+    # TODO Here we could have the 'init' option to create an empty versioning file
     citymodel = utils.load_cityjson(versioned_filename)
 
     args = {}

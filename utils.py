@@ -111,6 +111,7 @@ def convert_to_versioned_city_objects(city_objects, id_property_name="cityobject
     return new_objects
 
 def get_hash_of_object(object):
+    # TODO This has to normalise the input (sort as well)
     encoded = json.dumps(object).encode('utf-8')
     m = hashlib.new('sha1')
     m.update(encoded)
