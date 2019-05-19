@@ -10,10 +10,6 @@ empty_vcityjson = {
   "version": "1.0",
   "extensions": {},
   "metadata": {},
-  "transform": {
-    "scale": [],
-    "translate": []
-  },
   "CityObjects": {
   },
   "versioning": {
@@ -136,6 +132,46 @@ def convert_to_versioned_city_objects(city_objects, id_property_name="cityobject
         new_objects[new_id] = obj
     
     return new_objects
+
+def update_geom_indices_by_offset(a, offset):
+    for i, each in enumerate(a):
+        if isinstance(each, list):
+            update_geom_indices_by_offset(each, offset)
+        else:
+            if each is not None:
+                a[i] = each + offset
+
+def update_geom_indices_by_map(a, newids):
+    for i, each in enumerate(a):
+        if isinstance(each, list):
+            update_geom_indices_by_map(each, newids)
+        else:
+            a[i] = newids[each]
+
+def remove_duplicate_vertices(cm):     
+    totalinput = len(cm["vertices"])        
+    h = {}
+    newids = [-1] * len(cm["vertices"])
+    newvertices = []
+    for i, v in enumerate(cm["vertices"]):
+        s = str(v[0]) + " " + str(v[1]) + " " + str(v[2])
+        if s not in h:
+            newid = len(h)
+            newids[i] = newid
+            h[s] = newid
+            newvertices.append(s)
+        else:
+            newids[i] = h[s]
+    #-- replace the vertices, innit?
+    newv2 = []
+    for v in newvertices:
+        if "transform" in cm:
+            a = list(map(int, v.split()))
+        else:
+            a = list(map(float, v.split()))
+        newv2.append(a)
+    cm["vertices"] = newv2
+    return (newids, totalinput - len(cm["vertices"]))
 
 def get_hash_of_object(object):
     # TODO This has to normalise the input (sort as well)

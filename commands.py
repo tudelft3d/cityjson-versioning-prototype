@@ -12,10 +12,6 @@ minimal_json = "{\
   \"version\": \"1.0\",\
   \"extensions\": {},\
   \"metadata\": {},\
-  \"transform\": {\
-    \"scale\": [],\
-    \"translate\": []\
-  },\
   \"CityObjects\": {}\
 }"
 
@@ -273,8 +269,6 @@ class CommitCommand:
 
         new_citymodel = load_cityjson(in_file)
 
-        new_objects = convert_to_versioned_city_objects(new_citymodel["CityObjects"])
-
         new_version = {
             "author": self._author,
             "date": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
@@ -283,6 +277,22 @@ class CommitCommand:
             "objects": []
         }
 
+        print("Appending vertices...")
+        offset = len(vcm["vertices"])
+        vcm["vertices"] += new_citymodel["vertices"]
+        for obj_id, obj in new_citymodel["CityObjects"].items():
+            for g in obj['geometry']:
+                update_geom_indices_by_offset(g["boundaries"], offset)
+
+        print("Removing duplicate vertices...")
+        newids, new_ver_count = remove_duplicate_vertices(vcm)
+
+        for obj_id, obj in new_citymodel["CityObjects"].items():
+                for g in obj['geometry']:
+                    update_geom_indices_by_map(g["boundaries"], newids)
+
+        new_objects = convert_to_versioned_city_objects(new_citymodel["CityObjects"])
+
         for new_id, new_obj in new_objects.items():
             vcm["CityObjects"][new_id] = new_obj
             new_version["objects"].append(new_id)
@@ -290,7 +300,7 @@ class CommitCommand:
         new_versionid = get_hash_of_object(new_version)
 
         if len(vcm["versioning"]["versions"]) > 0:
-            if sorted(new_version["objects"]) == sorted(vcm["versioning"]["versions"][parent_versionid]["objects"]):
+            if sorted(new_version["objects"]) == sorted(vcm["versioning"]["versions"][parent_versionid]["objects"]) and len(new_citymodel["vertices"]) - new_ver_count == 0:
                 print("Nothing changed! Skipping this...")
                 return
 
