@@ -117,6 +117,7 @@ class CheckoutCommand:
         new_objects = get_versioned_city_objects(cm, version_name)
         new_objects = convert_to_regular_city_objects(new_objects, self._objectid_property)
         new_model["CityObjects"] = new_objects
+        new_model["vertices"] = cm["vertices"]
 
         print("Saving {0}...".format(output_file))
         save_cityjson(new_model, output_file)
