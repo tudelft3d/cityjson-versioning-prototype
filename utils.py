@@ -5,6 +5,33 @@ import hashlib
 from colorama import init, Fore, Back, Style
 init()
 
+empty_vcityjson = {
+  "type": "CityJSON",
+  "version": "1.0",
+  "extensions": {},
+  "metadata": {},
+  "transform": {
+    "scale": [],
+    "translate": []
+  },
+  "CityObjects": {
+  },
+  "versioning": {
+    "versions": {
+    },
+    "tags": {
+    },
+    "branches": {
+    }
+  },
+  "vertices": [],
+  "appearance": {},
+  "geometry-templates": {}
+}
+
+def create_vcityjson():
+    return empty_vcityjson
+
 def print_version(version_name, version, branches, tags):
     """Prints a description of a version to the terminal"""
     print(Fore.YELLOW + "version %s" % version_name, end='')

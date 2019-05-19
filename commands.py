@@ -104,6 +104,7 @@ class CheckoutCommand:
         self._objectid_property = property_name
 
     def execute(self):
+        # TODO Also add the vertices
         cm = self._citymodel
         ref = self._version
         output_file = self._output
@@ -261,10 +262,14 @@ class CommitCommand:
         self._output_file = output_file
     
     def execute(self):
+        # TODO Also update the vertices
         vcm = self._vcitymodel
         in_file = self._input_file
 
-        parent_versionid = find_version_from_ref(self._ref, vcm["versioning"])
+        parents = []
+        if len(vcm["versioning"]["versions"]) != 0:
+            parent_versionid = find_version_from_ref(self._ref, vcm["versioning"])
+            parents = [parent_versionid]
 
         new_citymodel = load_cityjson(in_file)
 
@@ -274,7 +279,7 @@ class CommitCommand:
             "author": self._author,
             "date": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             "message": self._message,
-            "parents": [ parent_versionid ],
+            "parents": parents,
             "objects": []
         }
 
@@ -286,7 +291,7 @@ class CommitCommand:
 
         vcm["versioning"]["versions"][new_versionid] = new_version
         
-        if is_ref_branch(self._ref, vcm["versioning"]):
+        if is_ref_branch(self._ref, vcm["versioning"]) or len(vcm["versioning"]["versions"]) == 1:
             print("Updating {branch} to {commit}".format(branch=self._ref, commit=new_versionid))
             vcm["versioning"]["branches"][self._ref] = new_versionid
         
