@@ -301,7 +301,10 @@ class CommitCommandBuilder:
         ref = args[4]
         author = args[5]
         message = args[6]
-        out_file = args[7]
+        if len(args) > 7:
+            out_file = args[7]
+        else:
+            out_file = in_file
         self._instance = CommitCommand(vcitymodel, in_file, ref, author, message, out_file)
         return self._instance
 
