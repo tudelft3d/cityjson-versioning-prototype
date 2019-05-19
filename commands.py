@@ -267,7 +267,7 @@ class CommitCommand:
         in_file = self._input_file
 
         parents = []
-        if len(vcm["versioning"]["versions"]) != 0:
+        if len(vcm["versioning"]["versions"]) > 0:
             parent_versionid = find_version_from_ref(self._ref, vcm["versioning"])
             parents = [parent_versionid]
 
@@ -288,6 +288,11 @@ class CommitCommand:
             new_version["objects"].append(new_id)
         
         new_versionid = get_hash_of_object(new_version)
+
+        if len(vcm["versioning"]["versions"]) > 0:
+            if sorted(new_version["objects"]) == sorted(vcm["versioning"]["versions"][parent_versionid]["objects"]):
+                print("Nothing changed! Skipping this...")
+                return
 
         vcm["versioning"]["versions"][new_versionid] = new_version
         
