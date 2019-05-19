@@ -290,6 +290,7 @@ class CommitCommand:
             print("Updating {branch} to {commit}".format(branch=self._ref, commit=new_versionid))
             vcm["versioning"]["branches"][self._ref] = new_versionid
         
+        print("Saving to {0}...".format(self._output_file))
         save_cityjson(vcm, self._output_file)
 
 class CommitCommandBuilder:
@@ -304,7 +305,7 @@ class CommitCommandBuilder:
         if len(args) > 7:
             out_file = args[7]
         else:
-            out_file = in_file
+            out_file = args[1]
         self._instance = CommitCommand(vcitymodel, in_file, ref, author, message, out_file)
         return self._instance
 
