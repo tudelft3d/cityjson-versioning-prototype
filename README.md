@@ -24,6 +24,8 @@ General syntax is:
 ./cjv.py versionedCityJson.json <command> [<args>]
 ```
 
+Instead of ``versionedCityJson.json`` you can just type ``init`` to start with an empty file (useful in combination with the ``commit`` command to create a versioned CityJSON).
+
 The available commands are (a *ref* can be a *version*, *branch* or *tag*.
 ):
 
@@ -45,10 +47,10 @@ The available commands are (a *ref* can be a *version*, *branch* or *tag*.
 ./cjv.py vCityJson.json diff <new_ref> <old_ref>
 ```
 
-- ``commit``, adds a new version from a CityJSON (``input.json``) with ``base_version`` as parent:
+- ``commit``, adds a new version from a CityJSON (``input.json``) with ``base_ref`` as parent:
 
 ```
-./cjv.py vCityJson.json commit <input.json> <base_version> <author> <message> [<output.json>]
+./cjv.py vCityJson.json commit <input.json> <base_ref> <author> <message> [<output.json>]
 ```
 
 - ``rehash``, converts all city object and version ids to hash (SHA-1):
@@ -58,6 +60,12 @@ The available commands are (a *ref* can be a *version*, *branch* or *tag*.
 ```
 
 ## Examples
+
+You can create a new versioned CityJSON using ``init`` and ``commit``:
+
+```
+./cjv.py init commit input_file.json master "John Doe" "Initial commit" new_vcityjson.json
+```
 
 You can show the log of ``master`` branch:
 
@@ -70,3 +78,9 @@ You can checkout a version to a regular CityJSON as follows:
 ```
 ./cjv.py Examples/buildingBeforeAndAfter.json checkout v30 buildingAtVersion30.json
 ```
+
+## TODO
+
+- Add support for geometry-templates, textures and materials\
+- Offer a help per commandcj
+- Add option to append objects except for just replacing current ones?
