@@ -149,14 +149,15 @@ class DiffCommand:
         new_version = self._new_version
         old_version = self._old_version
 
-        versioning = cm["versioning"]
+        new_version = find_version_from_ref(new_version, cm["versioning"])
+        old_version = find_version_from_ref(old_version, cm["versioning"])
 
-        new_version = find_version_from_ref(new_version, versioning)
-        old_version = find_version_from_ref(old_version, versioning)
+        new_objs = get_versioned_city_objects(cm, new_version)
+        old_objs = get_versioned_city_objects(cm, old_version)
 
         print("This is the diff between {commit_color}{new_version}{reset_style} and {commit_color}{old_version}{reset_style}".format(new_version=new_version, old_version=old_version, commit_color=Fore.YELLOW, reset_style=Style.RESET_ALL))
 
-        print_diff_of_versions(versioning["versions"][new_version], versioning["versions"][old_version])
+        print_diff_of_versioned_objects(new_objs, old_objs)
 
 class DiffCommandBuilder:
     def __init__(self):

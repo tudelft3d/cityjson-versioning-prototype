@@ -65,6 +65,44 @@ def print_diff_of_versions(new_version, old_version):
         for obj in same_objects:
             print("\t{0}".format(obj))
 
+def print_diff_of_versioned_objects(new_ver_objs, old_ver_objs, id_property_name="cityobject_id"):
+    """Print a diff of two dictionaries of versioned city objects to the terminal"""
+    # Find differences between the two versions
+    new_objects = set(new_ver_objs) - set(old_ver_objs)
+    old_objects = set(old_ver_objs) - set(new_ver_objs)
+    same_objects = set(new_ver_objs).intersection(set(old_ver_objs))
+
+    new_obj_ids = {obj[id_property_name]: obj_key for obj_key, obj in new_ver_objs.items() if obj_key in new_objects}
+    old_obj_ids = {obj[id_property_name]: obj_key for obj_key, obj in old_ver_objs.items() if obj_key in old_objects}
+
+    changed_objects = set(new_obj_ids).intersection(old_obj_ids)
+    new_objects = new_objects - set([v for k, v in new_obj_ids.items() if k in changed_objects])
+    old_objects = old_objects - set([v for k, v in old_obj_ids.items() if k in changed_objects])
+
+    print("\nChanges:\n")
+
+    if len(changed_objects):
+        print("{color}".format(color=Fore.BLUE), end='')
+        for obj_id in changed_objects:
+            print("\tchanged: {id} ({old_id} -> {new_id})".format(id=obj_id, old_id=trim_string(old_obj_ids[obj_id]), new_id=trim_string(new_obj_ids[obj_id])))
+    if len(new_objects):
+        print("{color}".format(color=Fore.GREEN), end='')
+        for obj in new_objects:
+            print("\tadded: {id} ({new_id})".format(id=new_ver_objs[obj][id_property_name], new_id=trim_string(obj)))
+    if len(old_objects):
+        print("{color}".format(color=Fore.RED), end='')
+        for obj in old_objects:
+            print("\tdeleted: {id} ({old_id})".format(id=old_ver_objs[obj][id_property_name], old_id=trim_string(obj)))
+    
+    if len(same_objects):
+        print("{color}\n{objcount} objects not changed.\n".format(color=Style.RESET_ALL, objcount=len(same_objects)))
+
+def trim_string(str, width=15, suffix=".."):
+    if len(str) > width:
+        return "{str}{suffix}".format(str=str[:width], suffix=suffix)
+    
+    return str
+
 def find_version_from_ref(ref, versioning):
     """Returns the version name related to a ref"""
     if ref in versioning["versions"]:
