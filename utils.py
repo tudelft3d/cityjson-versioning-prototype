@@ -105,11 +105,15 @@ def trim_string(str, width=15, suffix=".."):
 
 def find_version_from_ref(ref, versioning):
     """Returns the version name related to a ref"""
-    if ref in versioning["versions"]:
-        return ref
-    elif ref in versioning["branches"]:
+    candidates = [s for s in versioning["versions"] if s.startswith(ref)]
+    if len(candidates) > 1:
+        raise KeyError("{ref} is ambiguoush. Try with more characters!")
+    elif len(candidates) == 1:
+        return candidates[0]
+
+    if ref in versioning["branches"]:
         return versioning["branches"][ref]
-    elif ref in versioning["tags"]:
+    if ref in versioning["tags"]:
         return versioning["tags"][ref]
     
     raise KeyError("There is no {ref} in the file!".format(ref=ref))
