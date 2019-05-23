@@ -265,19 +265,12 @@ class CommitCommand:
         in_file = self._input_file
 
         parents = []
+        parent_versionid = None
         if len(vcm["versioning"]["versions"]) > 0:
             parent_versionid = find_version_from_ref(self._ref, vcm["versioning"])
             parents = [parent_versionid]
 
         new_citymodel = load_cityjson(in_file)
-
-        new_version = {
-            "author": self._author,
-            "date": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            "message": self._message,
-            "parents": parents,
-            "objects": []
-        }
 
         print("Appending vertices...")
         offset = len(vcm["vertices"])
@@ -295,16 +288,28 @@ class CommitCommand:
 
         new_objects = convert_to_versioned_city_objects(new_citymodel["CityObjects"])
 
+        if parent_versionid is not None:
+            old_objects = get_versioned_city_objects(vcm, parent_versionid)
+
+            if len(set(new_objects).intersection(old_objects)) == len(new_objects):
+                print("Nothing changed! Skipping this...")
+                return
+            
+            print_diff_of_versioned_objects(new_objects, old_objects)
+
+        new_version = {
+            "author": self._author,
+            "date": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            "message": self._message,
+            "parents": parents,
+            "objects": []
+        }
+
         for new_id, new_obj in new_objects.items():
             vcm["CityObjects"][new_id] = new_obj
             new_version["objects"].append(new_id)
         
         new_versionid = get_hash_of_object(new_version)
-
-        if len(vcm["versioning"]["versions"]) > 0:
-            if sorted(new_version["objects"]) == sorted(vcm["versioning"]["versions"][parent_versionid]["objects"]) and len(new_citymodel["vertices"]) - new_ver_count == 0:
-                print("Nothing changed! Skipping this...")
-                return
 
         vcm["versioning"]["versions"][new_versionid] = new_version
         
