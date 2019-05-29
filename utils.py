@@ -1,3 +1,5 @@
+"""This module provides functions to manipulate data for the prototype"""
+
 import json
 import hashlib
 
@@ -40,7 +42,7 @@ def print_version(version_name, version, branches, tags):
     print("Author: %s" % version["author"])
     print("Date: %s" % version["date"])
 
-    print("Message:\n\n" + Fore.CYAN + "%s\n" % version["message"] + Style.RESET_ALL)
+    print("Message:\n\n" + Fore.CYAN + "%s\n" % '\t'.join(('\t' + version["message"]).splitlines(True)) + Style.RESET_ALL)
 
 def print_diff_of_versions(new_version, old_version):
     """Prints a diff of two versions to the terminal"""
