@@ -1,5 +1,7 @@
 """A module that describes the semantic data model of a 3D city model"""
 
+from citymodel.geometry import GeometryObject
+
 class CityModel:
     """Describes a 3D city model"""
 
@@ -17,7 +19,12 @@ class CityObject:
         self._cityobject_id = cityobject_id
         self._type = objtype
         self._attributes = attributes
-        self._geometry = geometry
+        if isinstance(geometry, GeometryObject):
+            self._geometry = [geometry]
+        elif isinstance(geometry, list) or geometry is None:
+            self._geometry = geometry
+        else:
+            raise TypeError("Geometry object should be either a GeometryObject or a list of them")
         self._children = children
 
     @property

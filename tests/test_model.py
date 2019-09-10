@@ -1,6 +1,6 @@
 import pytest
 from citymodel.model import CityModel, CityObject, Building
-from citymodel.geometry import MultiSurface
+from citymodel.geometry import GeometryObject, MultiSurface
 
 class TestCityObject:
     
@@ -22,14 +22,18 @@ class TestCityObject:
     def test_create_with_geometry(self):
         """Is a city object with geometry created properly?"""
 
-        cityobject = CityObject("one_id", "Building", geometry=MultiSurface([
+        geometry = GeometryObject(1, MultiSurface([
             [
                 ((0, 0, 0), (0, 1, 0), (1, 1, 0), (1, 0, 0))
             ]
         ]))
 
+        cityobject = CityObject("one_id", "Building", geometry=geometry)
+
         assert isinstance(cityobject, CityObject)
-        assert isinstance(cityobject.geometry, MultiSurface)
+        assert len(cityobject.geometry) == 1
+        assert isinstance(cityobject.geometry[0], GeometryObject)
+        assert isinstance(cityobject.geometry[0].boundaries, MultiSurface)
     
     def test_representation_without_attributes_and_geometry(self):
         """Is a building without geometry returning the expected representation?"""
