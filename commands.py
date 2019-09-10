@@ -7,13 +7,13 @@ import datetime
 from colorama import init, Fore, Back, Style
 init()
 
-minimal_json = "{\
-  \"type\": \"CityJSON\",\
-  \"version\": \"1.0\",\
-  \"extensions\": {},\
-  \"metadata\": {},\
-  \"CityObjects\": {}\
-}"
+minimal_json = {
+  "type": "CityJSON",
+  "version": "1.0",
+  "extensions": {},
+  "metadata": {},
+  "CityObjects": {}
+}
 
 class LogCommand:
     def __init__(self, citymodel, ref="master"):
@@ -112,7 +112,7 @@ class CheckoutCommand:
             print("There is no ref '%s' in the provided versioned CityJSON" % version_name)
             quit()
         
-        new_model = json.loads(minimal_json)
+        new_model = minimal_json
         print("Extracting version '%s'..." % version_name)
         new_objects = get_versioned_city_objects(cm, version_name)
         new_objects = convert_to_regular_city_objects(new_objects, self._objectid_property)
