@@ -18,7 +18,7 @@ if __name__ == "__main__":
     versioned_filename = sys.argv[1]
 
     if len(sys.argv) < 3:
-        print("Please provide a command.")
+        print("Please provide a command. Available commands:\n{0}.".format('\n'.join(["- {0}".format(v) for v in commands.factory.list_commands()])))
         quit()
 
     command_name = sys.argv[2]
