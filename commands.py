@@ -291,7 +291,8 @@ class CommitCommand:
         if parent_versionid is not None:
             old_objects = get_versioned_city_objects(vcm, parent_versionid)
 
-            if len(set(new_objects).intersection(old_objects)) == len(new_objects):
+            common_objects = set(new_objects).intersection(old_objects)
+            if len(common_objects) == len(new_objects) && len(common_objects) == len(old_objects):
                 print("Nothing changed! Skipping this...")
                 return
             
