@@ -101,9 +101,9 @@ def diff(context, source_ref, dest_ref):
 @click.argument("output", required=False)
 @click.pass_context
 def rehash(context, output):
+    """Recalculate all object and commit ids as hashes."""
     if output is None:
         output=context.obj["filename"]
-    """Recalculate all object and commit ids as hashes."""
     def processor(citymodel):
         command = commands.RehashCommand(citymodel, output)
         command.execute()
