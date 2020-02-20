@@ -337,6 +337,52 @@ class CommitCommandBuilder:
         self._instance = CommitCommand(vcitymodel, in_file, ref, author, message, out_file)
         return self._instance
 
+class BranchCommand:
+    """Class that creates a branch at a given ref"""
+
+    def __init__(self, citymodel, ref, branch_name, output_file):
+        self._citymodel = citymodel
+        self._ref = ref
+        self._branch_name = branch_name
+        self._output_file = output_file
+    
+    def set_ref(self, ref):
+        self._ref = ref
+
+    def execute(self):
+        vcm = self._citymodel
+
+        version = find_version_from_ref(self._ref, vcm["versioning"])
+
+        if is_ref_branch(self._branch_name, vcm["versioning"]):
+            print("Branch '{branch}' already exists! Nothing to do.".format(branch=self._branch_name))
+            return
+
+        print("Creating '{branch}' at {version}...".format(branch=self._branch_name, version=version))
+
+        vcm["versioning"]["branches"][self._branch_name] = version
+
+        print("Saving file at {filename}...".format(filename=self._output_file))
+
+        save_cityjson(vcm, self._output_file)
+
+        print("Done! Tot ziens.")
+
+class BranchCommandBuilder:
+    def __init__(self):
+        self._instance = None
+    
+    def __call__(self, vcitymodel, args, **kwargs):
+        branch_name = args[3]
+        if len(args) > 4:
+            ref = args[4]
+        else:
+            ref = "master"
+        output_file = args[1]
+
+        self._instance = BranchCommand(vcitymodel, ref, branch_name, output_file)
+        return self._instance
+
 class CommandFactory:
     """A factory to create commands from their names"""
 
@@ -363,3 +409,4 @@ factory.register_builder("checkout", CheckoutCommandBuilder())
 factory.register_builder("diff", DiffCommandBuilder())
 factory.register_builder("rehash", RehashCommandBuilder())
 factory.register_builder("commit", CommitCommandBuilder())
+factory.register_builder("branch", BranchCommandBuilder())
