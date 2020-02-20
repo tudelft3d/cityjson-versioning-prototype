@@ -325,23 +325,3 @@ class BranchDeleteCommand:
         save_cityjson(vcm, self._output_file)
 
         print("Done! Tot ziens.")
-
-class CommandFactory:
-    """A factory to create commands from their names"""
-
-    def __init__(self):
-        self._builders = {}
-    
-    def register_builder(self, command_name, builder):
-        """Registers a new command with the given name"""
-        self._builders[command_name] = builder
-    
-    def create_command(self, command_name, **args):
-        """Get the command from a given name"""
-        command_builder = self._builders.get(command_name)
-        if not command_builder:
-            raise ValueError(command_name)
-        return command_builder(**args)
-    
-    def list_commands(self):
-        return self._builders.keys()
