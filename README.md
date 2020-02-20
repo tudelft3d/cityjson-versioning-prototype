@@ -53,6 +53,18 @@ The available commands are (a *ref* can be a *version*, *branch* or *tag*.
 ./cjv.py vCityJson.json commit <input.json> <base_ref> <author> <message> [<output.json>]
 ```
 
+- ``branch``, adds a branch at a given ``base_ref`` (default is ``master``):
+
+```
+./cjv.py vCityJson.json branch <branch_name> [<base_ref>]
+```
+
+or deletes a branch using the *-d* flag:
+
+```
+./cjv.py vCityJson.json branch -d <branch_name>
+```
+
 - ``rehash``, converts all city object and version ids to hash (SHA-1):
 
 ```
