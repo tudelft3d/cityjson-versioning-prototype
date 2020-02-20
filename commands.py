@@ -368,19 +368,48 @@ class BranchCommand:
 
         print("Done! Tot ziens.")
 
+class BranchDeleteCommand:
+    """Class that deletes a branch"""
+
+    def __init__(self, citymodel, branch_name, output_file):
+        self._citymodel = citymodel
+        self._branch_name = branch_name
+        self._output_file = output_file
+
+    def execute(self):
+        vcm = self._citymodel
+
+        if not is_ref_branch(self._branch_name, vcm["versioning"]):
+            print("Branch '{branch}' does not exist! Nothing to do.".format(branch=self._branch_name))
+            return
+
+        del vcm["versioning"]["branches"][self._branch_name]
+
+        print("Saving file at {filename}...".format(filename=self._output_file))
+
+        save_cityjson(vcm, self._output_file)
+
+        print("Done! Tot ziens.")
+
 class BranchCommandBuilder:
     def __init__(self):
         self._instance = None
     
     def __call__(self, vcitymodel, args, **kwargs):
-        branch_name = args[3]
-        if len(args) > 4:
-            ref = args[4]
+        if args[3] == "-d":
+            branch_name = args[4]
+            output_file = args[1]
+            
+            self._instance = BranchDeleteCommand(vcitymodel, branch_name, output_file)
         else:
-            ref = "master"
-        output_file = args[1]
+            branch_name = args[3]
+            if len(args) > 4:
+                ref = args[4]
+            else:
+                ref = "master"
+            output_file = args[1]
 
-        self._instance = BranchCommand(vcitymodel, ref, branch_name, output_file)
+            self._instance = BranchCommand(vcitymodel, ref, branch_name, output_file)
         return self._instance
 
 class CommandFactory:
