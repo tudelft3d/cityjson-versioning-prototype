@@ -77,18 +77,6 @@ class LogCommand:
                 # Add new versions for the future
                 next_versions.extend(new_versions)                
 
-class LogCommandBuilder:
-    def __init__(self):
-        self._instance = None
-    
-    def __call__(self, vcitymodel, args, **kwargs):
-        if len(args) > 3:
-            ref = args[3]
-        else:
-            ref = "master"
-        self._instance = LogCommand(vcitymodel, ref)
-        return self._instance
-
 class CheckoutCommand:
     def __init__(self, citymodel, version_name, output_file, **args):
         self._citymodel = citymodel
@@ -122,21 +110,6 @@ class CheckoutCommand:
         print("Saving {0}...".format(output_file))
         save_cityjson(new_model, output_file)
         print("Done!")
-
-class CheckoutCommandBuilder:
-    def __init__(self):
-        self._instance = None
-    
-    def __call__(self, vcitymodel, args, **kwargs):
-        version_name = args[3]
-        output_file = args[4]
-        self._instance = CheckoutCommand(vcitymodel, version_name, output_file)
-        if len(args) > 5:
-            if args[5] == "--no-id-property":
-                self._instance.set_objectid_property(None)
-            else:
-                self._instance.set_objectid_property(args[5])
-        return self._instance
 
 class DiffCommand:
     def __init__(self, citymodel, new_version, old_version, **args):
@@ -431,11 +404,3 @@ class CommandFactory:
     
     def list_commands(self):
         return self._builders.keys()
-
-factory = CommandFactory()
-factory.register_builder("log", LogCommandBuilder())
-factory.register_builder("checkout", CheckoutCommandBuilder())
-factory.register_builder("diff", DiffCommandBuilder())
-factory.register_builder("rehash", RehashCommandBuilder())
-factory.register_builder("commit", CommitCommandBuilder())
-factory.register_builder("branch", BranchCommandBuilder())

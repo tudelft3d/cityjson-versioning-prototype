@@ -58,7 +58,7 @@ def process_pipeline(processor, input):
 def log(context, ref):
     """Prints the history of a versioned CityJSON file.
     
-    REF is a valid reference to a commit (its id, a tag or a branch)
+    REF is a ref to a commit (id, tag or branch name)
     """
     def processor(citymodel):
         vcm = citymodel
@@ -67,43 +67,21 @@ def log(context, ref):
         command.execute()
     return processor
 
-def something():
-    if len(sys.argv) < 2:
-        print("Please provide a (versioned) CityJSON file")
-        quit()
-
-    # The filename of the CityJSON file to be analysed
-    versioned_filename = sys.argv[1]
-
-    if len(sys.argv) < 3:
-        print("Please provide a command. Available commands:\n{0}.".format('\n'.join(["- {0}".format(v) for v in commands.factory.list_commands()])))
-        quit()
-
-    command_name = sys.argv[2]
-
-    if versioned_filename == "init":
-        citymodel = utils.create_vcityjson()
-    else:
-        citymodel = utils.load_cityjson(versioned_filename)
-
-    args = {}
-    args["vcitymodel"] = citymodel
-    args["args"] = sys.argv
-
-    if "versioning" not in citymodel:
-        print(Fore.RED + "The file provided is not a versioned CityJSON!")
-        quit()
+@cli.command()
+@click.argument('ref')
+@click.argument('output')
+@click.option('--objectid_property', default='cityobject_id', show_default=True, help='property name of the original city object id')
+@click.option('--no_objectid', is_flag=True)
+@click.pass_context
+def checkout(context, ref, output, objectid_property, no_objectid):
+    """Extract a version from a specific commit.
     
-    try:
-        command = commands.factory.create_command(command_name, **args)
-    except:
-        print("'%s' is not a valid command. Please try one of: %s." % (command_name, ', '.join([v for v in commands.factory.list_commands()])))
-        quit()
-    
-    if command == None:
-        print("'%s' is not a valid command. Please try one of: %s." % (command_name, ', '.join([v for v in commands.factory.list_commands()])))
-        quit()
-
-    command.execute()
-
-    # TODO: Validate "versioning" property (should have versions, branches and tags)
+    REF is a ref to a commit (id, tag or branch name).
+    OUTPUT is the path of the output CityJSON."""
+    def processor(citymodel):
+        command = commands.CheckoutCommand(citymodel, ref, output)
+        command.set_objectid_property(objectid_property)
+        if no_objectid:
+            command.set_objectid_property(None)
+        command.execute()
+    return processor
