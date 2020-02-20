@@ -62,13 +62,13 @@ Adds a new version from a CityJSON (``input.json``) with ``base_ref`` as parent:
 
 ### ``branch``
 
-Adds a branch at a given ``base_ref`` (default is ``master``):
+Creates a branch at a given ``base_ref`` (default is ``master``):
 
 ```
 ./cjv.py vCityJson.json branch <branch_name> [<base_ref>]
 ```
 
-or deletes a branch using the *-d* flag:
+or deletes a branch using the `-d` or `--delete` flag:
 
 ```
 ./cjv.py vCityJson.json branch -d <branch_name>
