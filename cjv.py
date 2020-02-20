@@ -132,7 +132,7 @@ def commit(context, new_version, ref, author, message, output):
 @click.option('-o', '--output')
 @click.pass_context
 def branch(context, delete, branch, ref, output):
-    """Create or delete branches"""
+    """Create or delete branches."""
     if output is None:
         output = context.obj["filename"]
 
