@@ -4,24 +4,28 @@ A prototype implementation of interaction with versioned CityJSON files.
 
 ## Requirements
 
-- Python 3 (with ``json`` and ``colorama`` modules)
+- Python 3 with virtualenv
 
 ## Installation
 
-Just clone this repository and install Python 3 with the above modules.
+Clone this repository and install Python 3 with virtualenv.
 
-In Unix-like operating systems, you might also need to add execution permission to ``cjv.py``:
+To install the script and necessary dependencies:
 
 ```
-chmod u+x cjv.py
+virtualenv venv
+. venv/bin/activate
+pip install --editable .
 ```
+
+Then you can use the application by calling `cjv`.
 
 ## Usage
 
 General syntax is:
 
 ```
-./cjv.py versionedCityJson.json <command> [<args>]
+cjv versionedCityJson.json <command> [<args>]
 ```
 
 Instead of ``versionedCityJson.json`` you can just type ``init`` to start with an empty file (useful in combination with the ``commit`` command to create a versioned CityJSON).
@@ -33,7 +37,7 @@ The available commands are (a *ref* can be a *version*, *branch* or *tag*.
 Shows the history of the project starting from a ``ref`` (default is ``master``):
 
 ```
-./cjv.py vCityJson.json log [<ref>]
+cjv vCityJson.json log [<ref>]
 ```
 
 ### ``checkout``
@@ -41,7 +45,7 @@ Shows the history of the project starting from a ``ref`` (default is ``master``)
 Extracts a regular CityJSON from a specific version:
 
 ```
-./cjv.py vCityJson.json checkout <ref> <output.json>
+cjv vCityJson.json checkout <ref> <output.json>
 ```
 
 ### ``diff``
@@ -49,7 +53,7 @@ Extracts a regular CityJSON from a specific version:
 Shows the changes between two *refs*:
 
 ```
-./cjv.py vCityJson.json diff <new_ref> <old_ref>
+cjv vCityJson.json diff <new_ref> <old_ref>
 ```
 
 ### ``commit``
@@ -57,7 +61,7 @@ Shows the changes between two *refs*:
 Adds a new version from a CityJSON (``input.json``) with ``base_ref`` as parent:
 
 ```
-./cjv.py vCityJson.json commit <input.json> <base_ref> <author> <message> [<output.json>]
+cjv vCityJson.json commit <input.json> <base_ref> <author> <message> [<output.json>]
 ```
 
 ### ``branch``
@@ -65,13 +69,13 @@ Adds a new version from a CityJSON (``input.json``) with ``base_ref`` as parent:
 Creates a branch at a given ``base_ref`` (default is ``master``):
 
 ```
-./cjv.py vCityJson.json branch <branch_name> [<base_ref>]
+cjv vCityJson.json branch <branch_name> [<base_ref>]
 ```
 
 or deletes a branch using the `-d` or `--delete` flag:
 
 ```
-./cjv.py vCityJson.json branch -d <branch_name>
+cjv vCityJson.json branch -d <branch_name>
 ```
 
 ### ``rehash``
@@ -79,7 +83,7 @@ or deletes a branch using the `-d` or `--delete` flag:
 Converts all city object and version ids to hash (SHA-1):
 
 ```
-./cjv.py vCityJson.json rehash <output.json>
+cjv vCityJson.json rehash <output.json>
 ```
 
 ## Examples
@@ -87,23 +91,22 @@ Converts all city object and version ids to hash (SHA-1):
 You can create a new versioned CityJSON using ``init`` and ``commit``:
 
 ```
-./cjv.py init commit input_file.json master "John Doe" "Initial commit" new_vcityjson.json
+cjv init commit input_file.json master "John Doe" "Initial commit" new_vcityjson.json
 ```
 
 You can show the log of ``master`` branch:
 
 ```
-./cjv.py Examples/buildingBeforeAndAfter.json log master
+cjv Examples/buildingBeforeAndAfter.json log master
 ```
 
 You can checkout a version to a regular CityJSON as follows:
 
 ```
-./cjv.py Examples/buildingBeforeAndAfter.json checkout v30 buildingAtVersion30.json
+cjv Examples/buildingBeforeAndAfter.json checkout v30 buildingAtVersion30.json
 ```
 
 ## TODO
 
-- Add support for geometry-templates, textures and materials\
-- Offer a help per command
+- Add support for geometry-templates, textures and materials.
 - Add option to append objects except for just replacing current ones?
