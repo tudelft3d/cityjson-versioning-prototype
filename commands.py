@@ -272,22 +272,6 @@ class CommitCommand:
         print("Saving to {0}...".format(self._output_file))
         save_cityjson(vcm, self._output_file)
 
-class CommitCommandBuilder:
-    def __init__(self):
-        self._instance = None
-    
-    def __call__(self, vcitymodel, args, **kwargs):
-        in_file = args[3]
-        ref = args[4]
-        author = args[5]
-        message = args[6]
-        if len(args) > 7:
-            out_file = args[7]
-        else:
-            out_file = args[1]
-        self._instance = CommitCommand(vcitymodel, in_file, ref, author, message, out_file)
-        return self._instance
-
 class BranchCommand:
     """Class that creates a branch at a given ref"""
 

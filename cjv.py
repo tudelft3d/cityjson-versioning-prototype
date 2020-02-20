@@ -108,3 +108,19 @@ def rehash(context, output):
         command = commands.RehashCommand(citymodel, output)
         command.execute()
     return processor
+
+@cli.command()
+@click.argument('new_version')
+@click.argument('ref')
+@click.argument('author')
+@click.argument('message')
+@click.argument('output', required=False)
+@click.pass_context
+def commit(context, new_version, ref, author, message, output):
+    """Add a new version to the history based on the NEW_VERSION CityJSON file."""
+    if output is None:
+        output = context.obj["filename"]
+    def processor(citymodel):
+        command = commands.CommitCommand(citymodel, new_version, ref, author, message, output)
+        command.execute()
+    return processor
