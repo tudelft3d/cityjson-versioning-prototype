@@ -201,14 +201,6 @@ class RehashCommand:
         with open(self._output, "w") as outfile:
             json.dump(cm, outfile)
 
-class RehashCommandBuilder:
-    def __init__(self):
-        self._instance = None
-    
-    def __call__(self, vcitymodel, args, **kwargs):
-        self._instance = RehashCommand(vcitymodel, args[3])
-        return self._instance
-
 class CommitCommand:
     def __init__(self, vcitymodel, in_file, ref, author, message, output_file, **args):
         self._vcitymodel = vcitymodel
