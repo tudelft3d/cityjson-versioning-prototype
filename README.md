@@ -29,31 +29,40 @@ Instead of ``versionedCityJson.json`` you can just type ``init`` to start with a
 The available commands are (a *ref* can be a *version*, *branch* or *tag*.
 ):
 
-- ``log``, show the history of the project starting from a ``ref`` (default is ``master``):
+### ``log``
+Shows the history of the project starting from a ``ref`` (default is ``master``):
 
 ```
 ./cjv.py vCityJson.json log [<ref>]
 ```
 
-- ``checkout``, extracts a regular CityJSON from a specific version:
+### ``checkout``
+
+Extracts a regular CityJSON from a specific version:
 
 ```
 ./cjv.py vCityJson.json checkout <ref> <output.json>
 ```
 
-- ``diff``, shows the changes between two *refs*:
+### ``diff``
+
+Shows the changes between two *refs*:
 
 ```
 ./cjv.py vCityJson.json diff <new_ref> <old_ref>
 ```
 
-- ``commit``, adds a new version from a CityJSON (``input.json``) with ``base_ref`` as parent:
+### ``commit``
+
+Adds a new version from a CityJSON (``input.json``) with ``base_ref`` as parent:
 
 ```
 ./cjv.py vCityJson.json commit <input.json> <base_ref> <author> <message> [<output.json>]
 ```
 
-- ``branch``, adds a branch at a given ``base_ref`` (default is ``master``):
+### ``branch``
+
+Adds a branch at a given ``base_ref`` (default is ``master``):
 
 ```
 ./cjv.py vCityJson.json branch <branch_name> [<base_ref>]
@@ -65,7 +74,9 @@ or deletes a branch using the *-d* flag:
 ./cjv.py vCityJson.json branch -d <branch_name>
 ```
 
-- ``rehash``, converts all city object and version ids to hash (SHA-1):
+### ``rehash``
+
+Converts all city object and version ids to hash (SHA-1):
 
 ```
 ./cjv.py vCityJson.json rehash <output.json>
@@ -94,5 +105,5 @@ You can checkout a version to a regular CityJSON as follows:
 ## TODO
 
 - Add support for geometry-templates, textures and materials\
-- Offer a help per commandcj
+- Offer a help per command
 - Add option to append objects except for just replacing current ones?
