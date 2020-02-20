@@ -85,3 +85,14 @@ def checkout(context, ref, output, objectid_property, no_objectid):
             command.set_objectid_property(None)
         command.execute()
     return processor
+
+@cli.command()
+@click.argument('source_ref')
+@click.argument('dest_ref')
+@click.pass_context
+def diff(context, source_ref, dest_ref):
+    """Show the differences between two commits."""
+    def processor(citymode):
+        command = commands.DiffCommand(citymode, dest_ref, source_ref)
+        command.execute()
+    return processor

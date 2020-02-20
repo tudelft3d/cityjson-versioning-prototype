@@ -132,20 +132,6 @@ class DiffCommand:
 
         print_diff_of_versioned_objects(new_objs, old_objs)
 
-class DiffCommandBuilder:
-    def __init__(self):
-        self._instance = None
-    
-    def __call__(self, vcitymodel, args, **kwargs):
-        if len(args) < 5:
-            print("Not enough arguments: we need two versions for this!")
-            raise ValueError("Two arguments needed")
-
-        new_version = args[3]
-        old_version = args[4]
-        self._instance = DiffCommand(vcitymodel, new_version, old_version)
-        return self._instance
-
 class RehashCommand:
     def __init__(self, citymodel, output_file, **args):
         self._citymodel = citymodel
