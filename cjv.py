@@ -111,10 +111,10 @@ def rehash(context, output):
 
 @cli.command()
 @click.argument('new_version')
-@click.argument('ref')
-@click.argument('author')
-@click.argument('message')
-@click.argument('output', required=False)
+@click.argument('ref', required=False, default='master')
+@click.option('-a', '--author', prompt='Provide your name', help='name of the author')
+@click.option('-m', '--message', prompt='Describe your changes', help='decsription of the changes')
+@click.option('-o', '--output')
 @click.pass_context
 def commit(context, new_version, ref, author, message, output):
     """Add a new version to the history based on the NEW_VERSION CityJSON file."""
