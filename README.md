@@ -61,8 +61,15 @@ cjv vCityJson.json diff <new_ref> <old_ref>
 Adds a new version from a CityJSON (``input.json``) with ``base_ref`` as parent:
 
 ```
-cjv vCityJson.json commit <input.json> <base_ref> <author> <message> [<output.json>]
+cjv vCityJson.json commit <input.json> [<base_ref>] [-a <author>] [-m <message>] [-o <output.json>]
 ```
+
+If a ``base_ref`` is not provided, then the ``master`` branch is implied.
+
+Available options:
+- `-a` or `--author`: name of the commit's author (if not provided, user will be prompted),
+- `-m` or `--message`: description of the commit's changes (if not provided user will be prompted),
+- `-o` or `--output`: the output filename (if not provided the original versioned CityJSON file will be written)
 
 ### ``branch``
 
@@ -91,7 +98,7 @@ cjv vCityJson.json rehash <output.json>
 You can create a new versioned CityJSON using ``init`` and ``commit``:
 
 ```
-cjv init commit input_file.json master "John Doe" "Initial commit" new_vcityjson.json
+cjv init commit input_file.json master -a "John Doe" -m "Initial commit" -o new_vcityjson.json
 ```
 
 You can show the log of ``master`` branch:
