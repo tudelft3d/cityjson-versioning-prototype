@@ -126,13 +126,19 @@ def commit(context, new_version, ref, author, message, output):
     return processor
 
 @cli.command()
-@click.option('-d', '--delete', is_flag=True)
+@click.option('-d', '--delete', is_flag=True, help="delete the branch")
 @click.argument('branch')
-@click.argument('ref', required=False)
+@click.argument('ref', default='master', required=False)
 @click.option('-o', '--output')
 @click.pass_context
 def branch(context, delete, branch, ref, output):
-    """Create or delete branches."""
+    """Create or delete branches.
+    
+    BRANCH is the name of the branch.
+    
+    REF will be used as base if a branch is
+    created (default is 'master', if not provided)
+    """
     if output is None:
         output = context.obj["filename"]
 
