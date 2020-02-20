@@ -326,27 +326,6 @@ class BranchDeleteCommand:
 
         print("Done! Tot ziens.")
 
-class BranchCommandBuilder:
-    def __init__(self):
-        self._instance = None
-    
-    def __call__(self, vcitymodel, args, **kwargs):
-        if args[3] == "-d":
-            branch_name = args[4]
-            output_file = args[1]
-            
-            self._instance = BranchDeleteCommand(vcitymodel, branch_name, output_file)
-        else:
-            branch_name = args[3]
-            if len(args) > 4:
-                ref = args[4]
-            else:
-                ref = "master"
-            output_file = args[1]
-
-            self._instance = BranchCommand(vcitymodel, ref, branch_name, output_file)
-        return self._instance
-
 class CommandFactory:
     """A factory to create commands from their names"""
 

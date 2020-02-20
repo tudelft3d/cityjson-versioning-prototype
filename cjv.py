@@ -124,3 +124,26 @@ def commit(context, new_version, ref, author, message, output):
         command = commands.CommitCommand(citymodel, new_version, ref, author, message, output)
         command.execute()
     return processor
+
+@cli.command()
+@click.option('-d', '--delete', is_flag=True)
+@click.argument('branch')
+@click.argument('ref', required=False)
+@click.option('-o', '--output')
+@click.pass_context
+def branch(context, delete, branch, ref, output):
+    """Create or delete branches"""
+    if output is None:
+        output = context.obj["filename"]
+
+    def delete_processor(citymodel):
+        command = commands.BranchDeleteCommand(citymodel, branch, output)
+        command.execute()
+    def create_processor(citymodel):
+        command = commands.BranchCommand(citymodel, ref, branch, output)
+        command.execute()
+    
+    if delete:
+        return delete_processor
+    else:
+        return create_processor
