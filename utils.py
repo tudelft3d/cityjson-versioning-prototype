@@ -67,6 +67,38 @@ def print_diff_of_versions(new_version, old_version):
         for obj in same_objects:
             print("\t{0}".format(obj))
 
+def get_diff_of_versioned_objects(new_ver_objs, old_ver_objs, id_property_name="cityobject_id"):
+    """Returns the differences between two list of versioned city objects"""
+    # Find differences between the two versions
+    new_objects = set(new_ver_objs) - set(old_ver_objs)
+    old_objects = set(old_ver_objs) - set(new_ver_objs)
+    same_objects = set(new_ver_objs).intersection(set(old_ver_objs))
+
+    new_obj_ids = {obj[id_property_name]: obj_key for obj_key, obj in new_ver_objs.items() if obj_key in new_objects}
+    old_obj_ids = {obj[id_property_name]: obj_key for obj_key, obj in old_ver_objs.items() if obj_key in old_objects}
+
+    changed_objects = set(new_obj_ids).intersection(old_obj_ids)
+    new_objects = new_objects - set([v for k, v in new_obj_ids.items() if k in changed_objects])
+    old_objects = old_objects - set([v for k, v in old_obj_ids.items() if k in changed_objects])
+
+    result = {
+            "changed": {},
+            "added": {},
+            "removed": {},
+            "unchanged": []
+        }
+
+    for obj_id in changed_objects:
+        result["changed"][obj_id] = { "old_id": old_obj_ids[obj_id], "new_id": new_obj_ids[obj_id] }
+    
+    for obj in new_objects:
+        result["added"][new_ver_objs[obj][id_property_name]] = { "new_id": obj }
+
+    for obj in old_objects:
+        result["removed"][old_ver_objs[obj][id_property_name]] = { "old_id": obj }
+    
+    return result
+
 def print_diff_of_versioned_objects(new_ver_objs, old_ver_objs, id_property_name="cityobject_id"):
     """Print a diff of two dictionaries of versioned city objects to the terminal"""
     # Find differences between the two versions
