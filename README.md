@@ -2,6 +2,8 @@
 
 A prototype implementation of interaction with versioned CityJSON files.
 
+This tool implements versioning as initially proposed in [Vitalis et al, 2019](https://www.isprs-ann-photogramm-remote-sens-spatial-inf-sci.net/IV-4-W8/123/2019/).
+
 ## Requirements
 
 - Python 3 with virtualenv
