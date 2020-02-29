@@ -224,13 +224,13 @@ def update_geom_indices_by_map(a, newids):
         else:
             a[i] = newids[each]
 
-def remove_duplicate_vertices(cm):     
+def remove_duplicate_vertices(cm, precision):     
     totalinput = len(cm["vertices"])        
     h = {}
     newids = [-1] * len(cm["vertices"])
     newvertices = []
     for i, v in enumerate(cm["vertices"]):
-        s = str(v[0]) + " " + str(v[1]) + " " + str(v[2])
+        s = "{{x:.{p}f}} {{y:.{p}f}} {{z:.{p}f}}".format(p=precision).format(x=v[0], y=v[1], z=v[2])
         if s not in h:
             newid = len(h)
             newids[i] = newid

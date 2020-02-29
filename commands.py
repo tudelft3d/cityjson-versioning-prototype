@@ -231,7 +231,7 @@ class CommitCommand:
                 update_geom_indices_by_offset(g["boundaries"], offset)
 
         print("Removing duplicate vertices...")
-        newids, new_ver_count = remove_duplicate_vertices(vcm)
+        newids, new_ver_count = remove_duplicate_vertices(vcm, 3)
 
         for obj_id, obj in new_citymodel["CityObjects"].items():
                 for g in obj['geometry']:
