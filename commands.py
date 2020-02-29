@@ -325,3 +325,89 @@ class BranchDeleteCommand:
         save_cityjson(vcm, self._output_file)
 
         print("Done! Tot ziens.")
+
+class MergeBranchesCommand:
+    """Class that merges two branches"""
+
+    def __init__(self, citymodel, source_branch, dest_branch, author, output):
+        self._citymodel = citymodel
+        self._source_branch = source_branch
+        self._dest_branch = dest_branch
+        self._author = author
+        self._output_file = output
+    
+    def execute(self):
+        vcm = self._citymodel
+        source_branch = self._source_branch
+        dest_branch = self._dest_branch
+
+        versioning = vcm["versioning"]
+
+        # if not is_ref_branch(source_branch, versioning):
+        #     print("Source branch '{branch}' does not exist! Nothing to do.".format(branch=self._source_branch))
+        #     return
+
+        # if not is_ref_branch(dest_branch, versioning):
+        #     print("Destination branch '{branch}' does not exist! Nothing to do.".format(branch=self._dest_branch))
+        #     return
+        
+        source_version = find_version_from_ref(source_branch, versioning)
+        dest_version = find_version_from_ref(dest_branch, versioning)
+
+        dag = nx.DiGraph()
+        dag = build_dag_from_version(dag, versioning["versions"], source_version)
+        dag = build_dag_from_version(dag, versioning["versions"], dest_version)
+
+        if (dest_version in nx.ancestors(dag, source_version)):
+            print("{dest_ref} is earlier than {source_ref}! Can't do this.".format(dest_ref=dest_branch, source_ref=source_branch))
+            return
+
+        common_ancestor = nx.lowest_common_ancestor(dag, source_version, dest_version)
+
+        print("Common ancestor: {}".format(common_ancestor))
+
+        source_objects = get_versioned_city_objects(vcm, source_version)
+        dest_objects = get_versioned_city_objects(vcm, dest_version)
+        ancestor_objects = get_versioned_city_objects(vcm, common_ancestor)
+
+        source_changes = get_diff_of_versioned_objects(source_objects, ancestor_objects)
+        dest_changes = get_diff_of_versioned_objects(dest_objects, ancestor_objects)
+
+        source_ids_changed = set([k for k in source_changes["changed"].keys()]).union(set([k for k in source_changes["added"].keys()])).union(set([k for k in source_changes["removed"].keys()]))
+        dest_ids_changed = set([k for k in dest_changes["changed"].keys()]).union(set([k for k in dest_changes["added"].keys()])).union(set([k for k in dest_changes["removed"].keys()]))
+
+        conflicts = source_ids_changed.intersection(dest_ids_changed)
+        if len(conflicts) > 0:
+            print("There are conflicts!")
+            for c in conflicts:
+                print("- {}".format(c))
+            print("Forgive me for not being able to resolve them right now...")
+            return
+                
+        objects = set([k for k in source_objects.keys()]).intersection([k for k in dest_objects.keys()])
+        
+        # Given that no conflicts exist I can do the following
+        objects = objects.union(set([k["new_id"] for k in source_changes["changed"].values()]))
+        objects = objects.union(set([k["new_id"] for k in dest_changes["changed"].values()]))
+        objects = objects.union(set([k["new_id"] for k in source_changes["added"].values()]))
+        objects = objects.union(set([k["new_id"] for k in dest_changes["added"].values()]))
+
+        objects = list(objects)
+
+        new_version = {
+            "author": self._author,
+            "date": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            "message": "Merge {} to {}".format(source_branch, dest_branch),
+            "parents": [source_version, dest_version],
+            "objects": objects
+        }
+        
+        new_versionid = get_hash_of_object(new_version)
+
+        vcm["versioning"]["versions"][new_versionid] = new_version
+        
+        if is_ref_branch(dest_branch, vcm["versioning"]):
+            vcm["versioning"]["branches"][dest_branch] = new_versionid
+        
+        print("Saving to {0}...".format(self._output_file))
+        save_cityjson(vcm, self._output_file)

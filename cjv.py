@@ -158,3 +158,30 @@ def branch(context, delete, branch, ref, output):
         return delete_processor
     else:
         return create_processor
+
+@cli.command()
+@click.argument('source_branch')
+@click.argument('dest_branch', default = 'master')
+@click.option('-a', '--author', prompt='Provide your name', help='name of the author')
+@click.option('-o', '--output')
+@click.pass_context
+def merge(context, source_branch, dest_branch, author, output):
+    """Merges a branch to another one.
+
+    SOURCE_BRANCH is the branch to merge.
+
+    DEST_BRANCH is the branch to get the changes
+    of SOURCE_BRANCH (default is 'master')
+    """
+    if output is None:
+        output = context.obj["filename"]
+
+    def processor(citymodel):
+        command = commands.MergeBranchesCommand(citymodel,
+                                                source_branch,
+                                                dest_branch,
+                                                author,
+                                                output)
+        command.execute()
+    
+    return processor
