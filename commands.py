@@ -16,16 +16,16 @@ minimal_json = {
 }
 
 class LogCommand:
-    def __init__(self, citymodel, ref="master"):
+    def __init__(self, citymodel, refs=["master"]):
         self._citymodel = citymodel
-        self._ref = ref
+        self._refs = refs
     
     def set_ref(self, ref):
-        self._ref = ref
+        self._refs = refs
 
     def execute(self):
         cm = self._citymodel
-        ref = self._ref
+        refs = self._refs
 
         # Isolate the versioning property
         versioning = cm["versioning"]
@@ -40,15 +40,18 @@ class LogCommand:
             print("No versions found. Doei!")
             return
         
-        init_version = find_version_from_ref(ref, versioning)
-        
         dag = nx.DiGraph()
-        dag = build_dag_from_version(dag, versioning["versions"], init_version)
+        for ref in refs:
+            ref_version = find_version_from_ref(ref, versioning)
+            dag = build_dag_from_version(dag, versioning["versions"], ref_version)
 
         sorted_keys = list(nx.topological_sort(dag))
         sorted_keys.reverse()
 
-        found_branches = list(nx.shortest_simple_paths(dag, sorted_keys[-1], sorted_keys[0]))
+        found_branches = []
+        for ref in refs:
+            ref_version = find_version_from_ref(ref, versioning)
+            found_branches.extend(list(nx.shortest_simple_paths(dag, sorted_keys[-1], ref_version)))
         for version_name in sorted_keys:
             tabs = min([i for i, b in enumerate(found_branches) if version_name in b])
 

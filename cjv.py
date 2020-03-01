@@ -53,17 +53,19 @@ def process_pipeline(processor, input):
     processor(citymodel)
 
 @cli.command()
-@click.argument('ref', default="master")
+@click.argument('refs', nargs=-1)
 @click.pass_context
-def log(context, ref):
+def log(context, refs):
     """Prints the history of a versioned CityJSON file.
     
-    REF is a ref to a commit (id, tag or branch name)
+    REFs is a list of refs (ids, tags or branch names)
     """
+    if len(refs) == 0:
+        refs = ["master"]
     def processor(citymodel):
         vcm = citymodel
 
-        command = commands.LogCommand(vcm, ref)
+        command = commands.LogCommand(vcm, refs)
         command.execute()
     return processor
 
