@@ -32,8 +32,13 @@ cjv versionedCityJson.json <command> [<args>]
 
 Instead of ``versionedCityJson.json`` you can just type ``init`` to start with an empty file (useful in combination with the ``commit`` command to create a versioned CityJSON).
 
-The available commands are (a *ref* can be a *version*, *branch* or *tag*.
-):
+Call `cjv` with no arguments to list all commands. Help for an individual command is available with:
+
+```
+cjv <command_name> --help
+```
+
+The available commands are (a *ref* can be a *version*, *branch* or *tag*):
 
 ### ``log``
 Shows the history of the project starting from a ``ref`` (default is ``master``):
