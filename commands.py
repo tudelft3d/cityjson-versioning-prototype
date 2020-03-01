@@ -40,22 +40,19 @@ class LogCommand:
             print("No versions found. Doei!")
             return
         
-        next_versions = []
+        init_version = find_version_from_ref(ref, versioning)
+        
+        dag = nx.DiGraph()
+        dag = build_dag_from_version(dag, versioning["versions"], init_version)
 
-        # Find the requested ref
-        next_versions.append(find_version_from_ref(ref, versioning))
+        sorted_keys = list(nx.topological_sort(dag))
+        sorted_keys.reverse()
 
-        # Iterate through versions while there are next_versions to check
-        while len(next_versions) > 0:
-            # Find latest version
-            latest_date = versioning["versions"][next_versions[0]]["date"]
-            for candidate in next_versions:
-                if latest_date <= versioning["versions"][candidate]["date"]:
-                    latest_date = versioning["versions"][candidate]["date"]
-                    version_name = candidate
-            
+        found_branches = list(nx.shortest_simple_paths(dag, sorted_keys[-1], sorted_keys[0]))
+        for version_name in sorted_keys:
+            tabs = min([i for i, b in enumerate(found_branches) if version_name in b])
+
             current_version = versioning["versions"][version_name]
-            next_versions.remove(version_name)
 
             branches = []
             for branch_name, branch_ref in versioning["branches"].items():
@@ -67,15 +64,7 @@ class LogCommand:
                 if tag_ref == version_name:
                     tags.append(tag_name)
 
-            print_version(version_name, current_version, branches, tags)
-
-            # If there is a previous version, output the differences
-            if "parents" in current_version:
-                # Find only new versions from parents of the current commit
-                new_versions = list(set(current_version["parents"]) - set(next_versions))
-
-                # Add new versions for the future
-                next_versions.extend(new_versions)                
+            print_version(version_name, current_version, branches, tags, tabs)
 
 class CheckoutCommand:
     def __init__(self, citymodel, version_name, output_file, **args):

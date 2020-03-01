@@ -30,19 +30,24 @@ empty_vcityjson = {
 def create_vcityjson():
     return empty_vcityjson
 
-def print_version(version_name, version, branches, tags):
+def print_version(version_name, version, branches, tags, padding=0):
     """Prints a description of a version to the terminal"""
-    print(Fore.YELLOW + "version %s" % version_name, end='')
+    print("".join(["  " for i in range(padding)]), end='')
+    print(Fore.YELLOW + "* version %s" % version_name, end='')
     for branch in branches:
         print(' (' + Fore.CYAN + branch + Fore.YELLOW + ')', end='')
     for tag in tags:
         print(' (' + Fore.MAGENTA + 'tag: %s' % tag + Fore.YELLOW + ')', end='')
     print(Style.RESET_ALL)
 
+    print("".join(["  " for i in range(padding)]), end='')
     print("Author: %s" % version["author"])
+
+    print("".join(["  " for i in range(padding)]), end='')
     print("Date: %s" % version["date"])
 
-    print("Message:\n\n" + Fore.CYAN + "%s\n" % '\t'.join(('\t' + version["message"]).splitlines(True)) + Style.RESET_ALL)
+    print("".join(["  " for i in range(padding)]), end='')
+    print("Message:\n\n" + Fore.CYAN + "%s\n" % '\t'.join((''.join(['  ' for i in range(padding + 1)]) + version["message"]).splitlines(True)) + Style.RESET_ALL)
 
 def print_diff_of_versions(new_version, old_version):
     """Prints a diff of two versions to the terminal"""
