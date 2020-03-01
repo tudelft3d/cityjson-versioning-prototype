@@ -87,6 +87,16 @@ or deletes a branch using the `-d` or `--delete` flag:
 cjv vCityJson.json branch -d <branch_name>
 ```
 
+### ``merge``
+
+Merges ``source_ref`` to ``dest_ref``:
+
+```
+cjv vCityJson.json merge <source_ref> <dest_ref>
+```
+
+Normally you'd use branches for refs.
+
 ### ``rehash``
 
 Converts all city object and version ids to hash (SHA-1):
@@ -117,5 +127,6 @@ cjv Examples/buildingBeforeAndAfter.json checkout v30 buildingAtVersion30.json
 
 ## TODO
 
+- Add support for compressed CityJSONs.
 - Add support for geometry-templates, textures and materials.
 - Add option to append objects except for just replacing current ones?
