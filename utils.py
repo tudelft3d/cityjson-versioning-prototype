@@ -85,9 +85,9 @@ def get_diff_of_versioned_objects(new_ver_objs, old_ver_objs, id_property_name="
             "changed": {},
             "added": {},
             "removed": {},
-            "unchanged": []
+            "unchanged": {}
         }
-
+    
     for obj_id in changed_objects:
         result["changed"][obj_id] = { "old_id": old_obj_ids[obj_id], "new_id": new_obj_ids[obj_id] }
     
@@ -96,6 +96,9 @@ def get_diff_of_versioned_objects(new_ver_objs, old_ver_objs, id_property_name="
 
     for obj in old_objects:
         result["removed"][old_ver_objs[obj][id_property_name]] = { "old_id": obj }
+    
+    for obj in same_objects:
+        result["unchanged"][new_ver_objs[obj][id_property_name]] = { "id": obj}
     
     return result
 
