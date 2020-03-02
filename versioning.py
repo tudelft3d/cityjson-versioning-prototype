@@ -29,6 +29,11 @@ class VersionedCityJSON:
         """Returns the versioning aspect of CityJSON"""
         return Versioning(self, self._citymodel["versioning"])
 
+    @property
+    def data(self):
+        """Returns the origina json data."""
+        return self._citymodel
+
     def __repr__(self):
         return self._citymodel
 
@@ -38,6 +43,11 @@ class Versioning:
     def __init__(self, citymodel, data: dict):
         self._citymodel = citymodel
         self._json = data
+
+    @property
+    def citymodel(self):
+        """Returns the citymodel"""
+        return self._citymodel
 
     def resolve_ref(self, ref):
         """Returns the version name for the given ref."""
@@ -50,7 +60,7 @@ class Versioning:
         if ref in self._json["tags"]:
             return self._json["tags"][ref]
 
-        raise IndexError("Ref is not available in versioning.")
+        raise KeyError("Ref is not available in versioning.")
 
     def get_version_from_ref(self, ref):
         """Returns the version for the given ref."""
@@ -128,6 +138,34 @@ class Version:
                     for v in self._json["parents"]]
 
         return []
+
+    @property
+    def versioned_objects(self):
+        """Returns the dictionary of the versioned city objects."""
+        cm = self._versioning.citymodel
+
+        new_objects = {}
+        for obj_id in self._json["objects"]:
+            if obj_id not in cm.data["CityObjects"]:
+                print("  Object '%s' not found! Skipping..." % obj_id)
+                continue
+
+            new_objects[obj_id] = cm.data["CityObjects"][obj_id]
+
+        return new_objects
+
+    @property
+    def original_objects(self):
+        """Returns the dictionary of the original city objects."""
+        objs = self.versioned_objects
+
+        new_objects = {}
+        for _, obj in objs.items():
+            new_id = obj["cityobject_id"]
+            del obj["cityobject_id"]
+            new_objects[new_id] = obj
+
+        return new_objects
 
     def has_parents(self):
         """Returns 'True' if the version has parents, otherwise 'False'."""

@@ -1,24 +1,30 @@
-import json
-from utils import *
-import networkx as nx
-import datetime
-from versioning import VersionedCityJSON
-from graph import History, SimpleHistoryLog, GraphHistoryLog
+"""Module with the commands that are run through the cjv cli."""
 
+import datetime
+import json
+
+import networkx as nx
 # Code to have colors at the console output
-from colorama import init, Fore, Back, Style
+from colorama import Back, Fore, Style, init
+
+import utils
+from graph import GraphHistoryLog, History, SimpleHistoryLog
+from versioning import VersionedCityJSON
+
 init()
 
 minimal_json = {
-  "type": "CityJSON",
-  "version": "1.0",
-  "extensions": {},
-  "metadata": {},
-  "CityObjects": {}
+    "type": "CityJSON",
+    "version": "1.0",
+    "extensions": {},
+    "metadata": {},
+    "CityObjects": {}
 }
 
 class LogCommand:
-    def __init__(self, citymodel, refs=["master"], graph=False):
+    """Class that implements the log command."""
+
+    def __init__(self, citymodel, refs, graph=False):
         self._citymodel = VersionedCityJSON(citymodel)
         self._refs = refs
         self._graph = graph
@@ -51,66 +57,72 @@ class LogCommand:
         logger.print_all()
 
 class CheckoutCommand:
-    def __init__(self, citymodel, version_name, output_file, **args):
-        self._citymodel = citymodel
+    """Class that implements the checkout command."""
+
+    def __init__(self, citymodel, version_name, output_file):
+        self._citymodel = VersionedCityJSON(citymodel)
         self._version = version_name
         self._output = output_file
         self._objectid_property = "cityobject_id"
-    
+
     def set_objectid_property(self, property_name):
+        """Updates the property that represents the original object's name."""
         self._objectid_property = property_name
 
     def execute(self):
-        # TODO Also add the vertices
+        """Executes the checkout command."""
         cm = self._citymodel
         ref = self._version
         output_file = self._output
 
-        versioning = cm["versioning"]
         try:
-            version_name = find_version_from_ref(ref, versioning)
-        except:
-            print("There is no ref '%s' in the provided versioned CityJSON" % version_name)
+            version = cm.versioning.get_version_from_ref(ref)
+        except KeyError:
+            print("Oh no! '{}' does not exist...".format(version.name))
             quit()
         
         new_model = minimal_json
-        print("Extracting version '%s'..." % version_name)
-        new_objects = get_versioned_city_objects(cm, version_name)
-        new_objects = convert_to_regular_city_objects(new_objects, self._objectid_property)
+        print("Extracting version '%s'..." % version.name)
+        new_objects = version.original_objects
+
         new_model["CityObjects"] = new_objects
-        new_model["vertices"] = cm["vertices"]
+        new_model["vertices"] = cm.data["vertices"]
 
         print("Saving {0}...".format(output_file))
-        save_cityjson(new_model, output_file)
+        utils.save_cityjson(new_model, output_file)
         print("Done!")
 
 class DiffCommand:
+    """Class that implements the diff command."""
+
     def __init__(self, citymodel, new_version, old_version, **args):
-        self._citymodel = citymodel
+        self._citymodel = VersionedCityJSON(citymodel)
         self._new_version = new_version
         self._old_version = old_version
 
     def execute(self):
+        """Executes the diff command."""
         cm = self._citymodel
-        new_version = self._new_version
-        old_version = self._old_version
 
-        new_version = find_version_from_ref(new_version, cm["versioning"])
-        old_version = find_version_from_ref(old_version, cm["versioning"])
+        new_version = cm.versioning.get_version_from_ref(self._new_version)
+        old_version = cm.versioning.get_version_from_ref(self._old_version)
 
-        new_objs = get_versioned_city_objects(cm, new_version)
-        old_objs = get_versioned_city_objects(cm, old_version)
+        new_objs = new_version.versioned_objects
+        old_objs = old_version.versioned_objects
 
         print("This is the diff between {commit_color}{new_version}{reset_style} and {commit_color}{old_version}{reset_style}".format(new_version=new_version, old_version=old_version, commit_color=Fore.YELLOW, reset_style=Style.RESET_ALL))
 
-        print_diff_of_versioned_objects(new_objs, old_objs)
+        utils.print_diff_of_versioned_objects(new_objs, old_objs)
 
 class RehashCommand:
+    """Class that implements the rehash command."""
+
     def __init__(self, citymodel, output_file, **args):
         self._citymodel = citymodel
         self._output = output_file
     
     def execute(self):
+        """Executes the rehash command."""
         cm = self._citymodel
 
         # To keep the mapping between old and new keys
@@ -123,18 +135,17 @@ class RehashCommand:
         new_cityobjects = {}
         for obj_key, obj in cm["CityObjects"].items():
             #TODO Later we'll have to do that first for the second-layer objects and then for first ones
-            new_key = get_hash_of_object(obj)
+            new_key = utils.get_hash_of_object(obj)
             print("{newkey} <- {oldkey}".format(newkey=new_key, oldkey=obj_key))
             keypairs[obj_key] = new_key
 
             new_cityobjects[new_key] = cm["CityObjects"][obj_key]
         
         print("Versions:")
-
-        # Build the DAG
+        
         dag = nx.DiGraph()
         for branch, version in cm["versioning"]["branches"].items():
-            dag = build_dag_from_version(dag, cm["versioning"]["versions"], version)
+            dag = utils.build_dag_from_version(dag, cm["versioning"]["versions"], version)
 
         new_versions = {}
         sorted_keys = list(nx.topological_sort(dag))
@@ -151,7 +162,7 @@ class RehashCommand:
                     new_parents.append(ver_keypairs[parent_key])
                 version["parents"] = new_parents
             
-            new_key = get_hash_of_object(version)
+            new_key = utils.get_hash_of_object(version)
             print("{newkey} <- {oldkey}".format(newkey=new_key, oldkey=ver_key))
 
             new_versions[new_key] = version
@@ -191,36 +202,36 @@ class CommitCommand:
         parents = []
         parent_versionid = None
         if len(vcm["versioning"]["versions"]) > 0:
-            parent_versionid = find_version_from_ref(self._ref, vcm["versioning"])
+            parent_versionid = utils.find_version_from_ref(self._ref, vcm["versioning"])
             parents = [parent_versionid]
 
-        new_citymodel = load_cityjson(in_file)
+        new_citymodel = utils.load_cityjson(in_file)
 
         print("Appending vertices...")
         offset = len(vcm["vertices"])
         vcm["vertices"] += new_citymodel["vertices"]
         for obj_id, obj in new_citymodel["CityObjects"].items():
             for g in obj['geometry']:
-                update_geom_indices_by_offset(g["boundaries"], offset)
+                utils.update_geom_indices_by_offset(g["boundaries"], offset)
 
         print("Removing duplicate vertices...")
-        newids, new_ver_count = remove_duplicate_vertices(vcm, 3)
+        newids, new_ver_count = utils.remove_duplicate_vertices(vcm, 3)
 
         for obj_id, obj in new_citymodel["CityObjects"].items():
                 for g in obj['geometry']:
-                    update_geom_indices_by_map(g["boundaries"], newids)
+                    utils.update_geom_indices_by_map(g["boundaries"], newids)
 
-        new_objects = convert_to_versioned_city_objects(new_citymodel["CityObjects"])
+        new_objects = utils.convert_to_versioned_city_objects(new_citymodel["CityObjects"])
 
         if parent_versionid is not None:
-            old_objects = get_versioned_city_objects(vcm, parent_versionid)
+            old_objects = utils.get_versioned_city_objects(vcm, parent_versionid)
 
             common_objects = set(new_objects).intersection(old_objects)
             if len(common_objects) == len(new_objects) and len(common_objects) == len(old_objects):
                 print("Nothing changed! Skipping this...")
                 return
             
-            print_diff_of_versioned_objects(new_objects, old_objects)
+            utils.print_diff_of_versioned_objects(new_objects, old_objects)
 
         new_version = {
             "author": self._author,
@@ -234,16 +245,16 @@ class CommitCommand:
             vcm["CityObjects"][new_id] = new_obj
             new_version["objects"].append(new_id)
         
-        new_versionid = get_hash_of_object(new_version)
+        new_versionid = utils.get_hash_of_object(new_version)
 
         vcm["versioning"]["versions"][new_versionid] = new_version
         
-        if is_ref_branch(self._ref, vcm["versioning"]) or len(vcm["versioning"]["versions"]) == 1:
+        if utils.is_ref_branch(self._ref, vcm["versioning"]) or len(vcm["versioning"]["versions"]) == 1:
             print("Updating {branch} to {commit}".format(branch=self._ref, commit=new_versionid))
             vcm["versioning"]["branches"][self._ref] = new_versionid
         
         print("Saving to {0}...".format(self._output_file))
-        save_cityjson(vcm, self._output_file)
+        utils.save_cityjson(vcm, self._output_file)
 
 class BranchCommand:
     """Class that creates a branch at a given ref"""
@@ -260,9 +271,9 @@ class BranchCommand:
     def execute(self):
         vcm = self._citymodel
 
-        version = find_version_from_ref(self._ref, vcm["versioning"])
+        version = utils.find_version_from_ref(self._ref, vcm["versioning"])
 
-        if is_ref_branch(self._branch_name, vcm["versioning"]):
+        if utils.is_ref_branch(self._branch_name, vcm["versioning"]):
             print("Branch '{branch}' already exists! Nothing to do.".format(branch=self._branch_name))
             return
 
@@ -272,7 +283,7 @@ class BranchCommand:
 
         print("Saving file at {filename}...".format(filename=self._output_file))
 
-        save_cityjson(vcm, self._output_file)
+        utils.save_cityjson(vcm, self._output_file)
 
         print("Done! Tot ziens.")
 
@@ -287,7 +298,7 @@ class BranchDeleteCommand:
     def execute(self):
         vcm = self._citymodel
 
-        if not is_ref_branch(self._branch_name, vcm["versioning"]):
+        if not utils.is_ref_branch(self._branch_name, vcm["versioning"]):
             print("Branch '{branch}' does not exist! Nothing to do.".format(branch=self._branch_name))
             return
 
@@ -295,7 +306,7 @@ class BranchDeleteCommand:
 
         print("Saving file at {filename}...".format(filename=self._output_file))
 
-        save_cityjson(vcm, self._output_file)
+        utils.save_cityjson(vcm, self._output_file)
 
         print("Done! Tot ziens.")
 
@@ -324,12 +335,12 @@ class MergeBranchesCommand:
         #     print("Destination branch '{branch}' does not exist! Nothing to do.".format(branch=self._dest_branch))
         #     return
         
-        source_version = find_version_from_ref(source_branch, versioning)
-        dest_version = find_version_from_ref(dest_branch, versioning)
+        source_version = utils.find_version_from_ref(source_branch, versioning)
+        dest_version = utils.find_version_from_ref(dest_branch, versioning)
 
         dag = nx.DiGraph()
-        dag = build_dag_from_version(dag, versioning["versions"], source_version)
-        dag = build_dag_from_version(dag, versioning["versions"], dest_version)
+        dag = utils.build_dag_from_version(dag, versioning["versions"], source_version)
+        dag = utils.build_dag_from_version(dag, versioning["versions"], dest_version)
 
         if (dest_version in nx.ancestors(dag, source_version)):
             print("{dest_ref} is earlier than {source_ref}! Can't do this.".format(dest_ref=dest_branch, source_ref=source_branch))
@@ -339,12 +350,12 @@ class MergeBranchesCommand:
 
         print("Common ancestor: {}".format(common_ancestor))
 
-        source_objects = get_versioned_city_objects(vcm, source_version)
-        dest_objects = get_versioned_city_objects(vcm, dest_version)
-        ancestor_objects = get_versioned_city_objects(vcm, common_ancestor)
+        source_objects = utils.get_versioned_city_objects(vcm, source_version)
+        dest_objects = utils.get_versioned_city_objects(vcm, dest_version)
+        ancestor_objects = utils.get_versioned_city_objects(vcm, common_ancestor)
 
-        source_changes = get_diff_of_versioned_objects(source_objects, ancestor_objects)
-        dest_changes = get_diff_of_versioned_objects(dest_objects, ancestor_objects)
+        source_changes = utils.get_diff_of_versioned_objects(source_objects, ancestor_objects)
+        dest_changes = utils.get_diff_of_versioned_objects(dest_objects, ancestor_objects)
 
         source_ids_changed = set([k for k in source_changes["changed"].keys()]).union(set([k for k in source_changes["added"].keys()])).union(set([k for k in source_changes["removed"].keys()]))
         dest_ids_changed = set([k for k in dest_changes["changed"].keys()]).union(set([k for k in dest_changes["added"].keys()])).union(set([k for k in dest_changes["removed"].keys()]))
@@ -375,12 +386,12 @@ class MergeBranchesCommand:
             "objects": objects
         }
         
-        new_versionid = get_hash_of_object(new_version)
+        new_versionid = utils.get_hash_of_object(new_version)
 
         vcm["versioning"]["versions"][new_versionid] = new_version
         
-        if is_ref_branch(dest_branch, vcm["versioning"]):
+        if utils.is_ref_branch(dest_branch, vcm["versioning"]):
             vcm["versioning"]["branches"][dest_branch] = new_versionid
         
         print("Saving to {0}...".format(self._output_file))
-        save_cityjson(vcm, self._output_file)
+        utils.save_cityjson(vcm, self._output_file)
