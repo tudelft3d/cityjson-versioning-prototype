@@ -3,7 +3,7 @@ from utils import *
 import networkx as nx
 import datetime
 from versioning import VersionedCityJSON
-from graph import History
+from graph import History, SimpleHistoryLog
 
 # Code to have colors at the console output
 from colorama import init, Fore, Back, Style
@@ -40,39 +40,43 @@ class LogCommand:
         for ref in self._refs:
             history.add_versions(self._citymodel.versioning.resolve_ref(ref))
 
-        dag = history.get_dag()
-        sorted_keys = list(nx.topological_sort(dag))
-        sorted_keys.reverse()
+        logger = SimpleHistoryLog(history)
 
-        found_branches = []
-        for ref in self._refs:
-            version = self._citymodel.versioning.get_version_from_ref(ref)
-            found_branches.extend(list(nx.shortest_simple_paths(dag, sorted_keys[-1], version.name)))
-        branches_shown = [found_branches[0]]
-        for version_name in sorted_keys:
-            in_branches = [i for i, b in enumerate(found_branches) if version_name in b]
-            divide = False
-            merge = False
-            if len(in_branches) == 1:
-                branch = in_branches[0]
-            else:
-                branch = min(in_branches)
-                for b in in_branches:
-                    if found_branches[b] not in branches_shown:
-                        branches_shown.append(found_branches[b])
-                        divide = True
+        logger.print_all()
+
+        # dag = history.dag
+        # sorted_keys = list(nx.topological_sort(dag))
+        # sorted_keys.reverse()
+
+        # found_branches = []
+        # for ref in self._refs:
+        #     version = self._citymodel.versioning.get_version_from_ref(ref)
+        #     found_branches.extend(list(nx.shortest_simple_paths(dag, sorted_keys[-1], version.name)))
+        # branches_shown = [found_branches[0]]
+        # for version_name in sorted_keys:
+        #     in_branches = [i for i, b in enumerate(found_branches) if version_name in b]
+        #     divide = False
+        #     merge = False
+        #     if len(in_branches) == 1:
+        #         branch = in_branches[0]
+        #     else:
+        #         branch = min(in_branches)
+        #         for b in in_branches:
+        #             if found_branches[b] not in branches_shown:
+        #                 branches_shown.append(found_branches[b])
+        #                 divide = True
                 
-                if divide == False:
-                    branches_shown.remove(found_branches[in_branches[1]])
-                    merge = True
+        #         if divide == False:
+        #             branches_shown.remove(found_branches[in_branches[1]])
+        #             merge = True
 
-            current_version = self._citymodel.versioning.versions[version_name]
+        #     current_version = self._citymodel.versioning.versions[version_name]
 
-            branches = current_version.branches
+        #     branches = current_version.branches
 
-            tags = current_version.tags
+        #     tags = current_version.tags
 
-            print_version(current_version, branch, len(branches_shown), divide, merge)
+        #     print_version(current_version, branch, len(branches_shown), divide, merge)
 
 class CheckoutCommand:
     def __init__(self, citymodel, version_name, output_file, **args):
