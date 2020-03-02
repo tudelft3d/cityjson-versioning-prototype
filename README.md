@@ -47,6 +47,8 @@ Shows the history of the project starting from a ``ref`` (default is ``master``)
 cjv vCityJson.json log [<ref>]
 ```
 
+You may use the `--graph` option to show the history as a graph.
+
 ### ``checkout``
 
 Extracts a regular CityJSON from a specific version:
