@@ -20,7 +20,7 @@ class LogCommand:
         self._citymodel = citymodel
         self._refs = refs
     
-    def set_ref(self, ref):
+    def set_refs(self, refs):
         self._refs = refs
 
     def execute(self):
@@ -52,8 +52,23 @@ class LogCommand:
         for ref in refs:
             ref_version = find_version_from_ref(ref, versioning)
             found_branches.extend(list(nx.shortest_simple_paths(dag, sorted_keys[-1], ref_version)))
+        branches_shown = [found_branches[0]]
         for version_name in sorted_keys:
-            tabs = min([i for i, b in enumerate(found_branches) if version_name in b])
+            in_branches = [i for i, b in enumerate(found_branches) if version_name in b]
+            divide = False
+            merge = False
+            if len(in_branches) == 1:
+                branch = in_branches[0]
+            else:
+                branch = min(in_branches)
+                for b in in_branches:
+                    if found_branches[b] not in branches_shown:
+                        branches_shown.append(found_branches[b])
+                        divide = True
+                
+                if divide == False:
+                    branches_shown.remove(found_branches[in_branches[1]])
+                    merge = True
 
             current_version = versioning["versions"][version_name]
 
@@ -67,7 +82,7 @@ class LogCommand:
                 if tag_ref == version_name:
                     tags.append(tag_name)
 
-            print_version(version_name, current_version, branches, tags, tabs)
+            print_version(version_name, current_version, branches, tags, branch, len(branches_shown), divide, merge)
 
 class CheckoutCommand:
     def __init__(self, citymodel, version_name, output_file, **args):

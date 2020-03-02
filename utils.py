@@ -30,24 +30,46 @@ empty_vcityjson = {
 def create_vcityjson():
     return empty_vcityjson
 
-def print_version(version_name, version, branches, tags, padding=0):
+def print_version(version_name, version, branches, tags, branch=0, num_of_branches=1, divide=False, merge=False):
     """Prints a description of a version to the terminal"""
-    print("".join(["  " for i in range(padding)]), end='')
-    print(Fore.YELLOW + "* version %s" % version_name, end='')
+    # print(get_lines_of_branches(num_of_branches) + " Branch: {}, Branches count: {}, Divide: {}, Merge: {}".format(branch, num_of_branches, divide, merge))
+
+    if merge:
+        print("|/")
+
+    # print("".join(["  " for i in range(branch)]), end='')
+    print(Fore.YELLOW + get_star_str(branch, num_of_branches, divide, merge) + " version %s" % version_name, end='')
     for branch in branches:
         print(' (' + Fore.CYAN + branch + Fore.YELLOW + ')', end='')
     for tag in tags:
         print(' (' + Fore.MAGENTA + 'tag: %s' % tag + Fore.YELLOW + ')', end='')
     print(Style.RESET_ALL)
 
-    print("".join(["  " for i in range(padding)]), end='')
-    print("Author: %s" % version["author"])
+    if divide:
+        print("|\\")
+    print(get_lines_of_branches(num_of_branches), end='')
+    print(" Author: %s" % version["author"])
 
-    print("".join(["  " for i in range(padding)]), end='')
-    print("Date: %s" % version["date"])
+    print(get_lines_of_branches(num_of_branches), end='')
+    print(" Date: %s" % version["date"])
 
-    print("".join(["  " for i in range(padding)]), end='')
-    print("Message:\n\n" + Fore.CYAN + "%s\n" % '\t'.join((''.join(['  ' for i in range(padding + 1)]) + version["message"]).splitlines(True)) + Style.RESET_ALL)
+    print(get_lines_of_branches(num_of_branches), end='')
+    print(" Message:\n" + get_lines_of_branches(num_of_branches) + "\n" + Fore.CYAN + (get_lines_of_branches(num_of_branches) + '\t%s') % (get_lines_of_branches(num_of_branches) + '\t').join(version["message"].splitlines(True)) + Style.RESET_ALL, end='\n')
+
+def get_star_str(branch, num_of_branches, divide, merge):
+    if divide or merge:
+        times = num_of_branches - 1
+    else:
+        times = num_of_branches
+    
+    result = "".join(['| ' for i in range(branch)])
+    result += "* "
+    result += "".join(['| ' for i in range(branch + 1, times)])
+
+    return result
+
+def get_lines_of_branches(num_of_branches):
+    return ''.join(['| ' for i in range(num_of_branches)])
 
 def print_diff_of_versions(new_version, old_version):
     """Prints a diff of two versions to the terminal"""
