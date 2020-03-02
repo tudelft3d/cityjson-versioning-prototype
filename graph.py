@@ -12,17 +12,17 @@ class History:
         self._citymodel = citymodel
         self._dag = nx.DiGraph()
 
-    def add_versions(self, final_version):
-        """Adds the versions that lead to final_version."""
+    def add_versions(self, version_name):
+        """Adds the versions that lead to version_name."""
         G = self._dag
 
-        next_key = final_version
-        next_ver = self._citymodel.versioning.versions[final_version]
+        next_key = version_name
+        next_ver = self._citymodel.versioning.versions[version_name]
         G.add_node(next_key)
         for parent in next_ver.parents:
             if not G.has_node(parent):
-                self.add_versions(parent)
-            G.add_edge(parent, next_key)
+                self.add_versions(parent.name)
+            G.add_edge(parent.name, next_key)
 
     def get_dag(self):
         """Returns the dag object."""

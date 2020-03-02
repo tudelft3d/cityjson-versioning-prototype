@@ -39,10 +39,27 @@ class Versioning:
         self._citymodel = citymodel
         self._json = data
 
+    def resolve_ref(self, ref):
+        """Returns the version name for the given ref."""
+        if ref in self.versions:
+            return ref
+
+        if ref in self._json["branches"]:
+            return self._json["branches"][ref]
+
+        if ref in self._json["tags"]:
+            return self._json["tags"][ref]
+
+        raise IndexError("Ref is not available in versioning.")
+
+    def get_version_from_ref(self, ref):
+        """Returns the version for the given ref."""
+        return self.versions[self.resolve_ref(ref)]
+
     @property
     def versions(self) -> Dict[str, 'Version']:
         """Returns a dictionary of versions."""
-        versions = {k : Version(self, j)
+        versions = {k : Version(self, j, k)
                     for k, j
                     in self._json["versions"].items()}
         return versions
@@ -69,9 +86,19 @@ class Versioning:
 class Version:
     """Class that represent a CityJSON version."""
 
-    def __init__(self, versioning, data: dict):
+    def __init__(self, versioning, data: dict, version_name=None):
         self._versioning = versioning
         self._json = data
+
+        if version_name is None:
+            self._version_name = utils.get_hash_of_object(data)
+        else:
+            self._version_name = version_name
+
+    @property
+    def name(self):
+        """Returns the id of this version."""
+        return self._version_name
 
     @property
     def author(self):
@@ -101,5 +128,25 @@ class Version:
         """Returns 'True' if the version has parents, otherwise 'False'."""
         return "parents" in self._json
 
+    @property
+    def branches(self):
+        """Returns the list of branch names that link to this version."""
+        result = [branch_name
+                  for branch_name, version in self._versioning.branches.items()
+                  if version.name == self._version_name]
+
+        return result
+
+    @property
+    def tags(self):
+        """Returns the list of tag names that link to this version."""
+        result = [tag_name
+                  for tag_name, version in self._versioning.tags.items()
+                  if version.name == self._version_name]
+
+        return result
+
     def __repr__(self):
-        return str(self._json)
+        repr_dict = self._json.copy()
+        del repr_dict["objects"]
+        return str(repr_dict)

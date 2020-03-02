@@ -7,6 +7,8 @@ import hashlib
 from colorama import init, Fore, Back, Style
 init()
 
+from versioning import Version
+
 empty_vcityjson = {
   "type": "CityJSON",
   "version": "1.0",
@@ -30,31 +32,28 @@ empty_vcityjson = {
 def create_vcityjson():
     return empty_vcityjson
 
-def print_version(version_name, version, branches, tags, branch=0, num_of_branches=1, divide=False, merge=False):
+def print_version(version: Version, branch=0, num_of_branches=1, divide=False, merge=False):
     """Prints a description of a version to the terminal"""
-    # print(get_lines_of_branches(num_of_branches) + " Branch: {}, Branches count: {}, Divide: {}, Merge: {}".format(branch, num_of_branches, divide, merge))
-
     if merge:
         print("|/")
 
-    # print("".join(["  " for i in range(branch)]), end='')
-    print(Fore.YELLOW + get_star_str(branch, num_of_branches, divide, merge) + " version %s" % version_name, end='')
-    for branch in branches:
+    print(Fore.YELLOW + get_star_str(branch, num_of_branches, divide, merge) + " version %s" % version.name, end='')
+    for branch in version.branches:
         print(' (' + Fore.CYAN + branch + Fore.YELLOW + ')', end='')
-    for tag in tags:
+    for tag in version.tags:
         print(' (' + Fore.MAGENTA + 'tag: %s' % tag + Fore.YELLOW + ')', end='')
     print(Style.RESET_ALL)
 
     if divide:
         print("|\\")
     print(get_lines_of_branches(num_of_branches), end='')
-    print(" Author: %s" % version["author"])
+    print(" Author: %s" % version.author)
 
     print(get_lines_of_branches(num_of_branches), end='')
-    print(" Date: %s" % version["date"])
+    print(" Date: %s" % version.date)
 
     print(get_lines_of_branches(num_of_branches), end='')
-    print(" Message:\n" + get_lines_of_branches(num_of_branches) + "\n" + Fore.CYAN + (get_lines_of_branches(num_of_branches) + '\t%s') % (get_lines_of_branches(num_of_branches) + '\t').join(version["message"].splitlines(True)) + Style.RESET_ALL, end='\n')
+    print(" Message:\n" + get_lines_of_branches(num_of_branches) + "\n" + Fore.CYAN + (get_lines_of_branches(num_of_branches) + '\t%s') % (get_lines_of_branches(num_of_branches) + '\t').join(version.message.splitlines(True)) + Style.RESET_ALL, end='\n')
 
 def get_star_str(branch, num_of_branches, divide, merge):
     if divide or merge:

@@ -2,6 +2,8 @@ import json
 from utils import *
 import networkx as nx
 import datetime
+from versioning import VersionedCityJSON
+from graph import History
 
 # Code to have colors at the console output
 from colorama import init, Fore, Back, Style
@@ -17,41 +19,35 @@ minimal_json = {
 
 class LogCommand:
     def __init__(self, citymodel, refs=["master"]):
-        self._citymodel = citymodel
+        self._citymodel = VersionedCityJSON(citymodel)
         self._refs = refs
-    
+
     def set_refs(self, refs):
+        """Set the refs to be used as end-points of the output graph."""
         self._refs = refs
 
     def execute(self):
-        cm = self._citymodel
-        refs = self._refs
+        """Executes the log command, printing the graph of history."""
 
-        # Isolate the versioning property
-        versioning = cm["versioning"]
-        
-        # The number of versions
-        version_count = len(versioning["versions"])
-
-        # Check if versions are present in the file
+        version_count = len(self._citymodel.versioning.versions)
         if version_count > 0:
-            print("Found %s%d%s versions.\n" % (Fore.GREEN, len(versioning["versions"]), Style.RESET_ALL))
+            print("Found %s%d%s versions.\n" % (Fore.GREEN, version_count, Style.RESET_ALL))
         else:
             print("No versions found. Doei!")
             return
-        
-        dag = nx.DiGraph()
-        for ref in refs:
-            ref_version = find_version_from_ref(ref, versioning)
-            dag = build_dag_from_version(dag, versioning["versions"], ref_version)
 
+        history = History(self._citymodel)
+        for ref in self._refs:
+            history.add_versions(self._citymodel.versioning.resolve_ref(ref))
+
+        dag = history.get_dag()
         sorted_keys = list(nx.topological_sort(dag))
         sorted_keys.reverse()
 
         found_branches = []
-        for ref in refs:
-            ref_version = find_version_from_ref(ref, versioning)
-            found_branches.extend(list(nx.shortest_simple_paths(dag, sorted_keys[-1], ref_version)))
+        for ref in self._refs:
+            version = self._citymodel.versioning.get_version_from_ref(ref)
+            found_branches.extend(list(nx.shortest_simple_paths(dag, sorted_keys[-1], version.name)))
         branches_shown = [found_branches[0]]
         for version_name in sorted_keys:
             in_branches = [i for i, b in enumerate(found_branches) if version_name in b]
@@ -70,19 +66,13 @@ class LogCommand:
                     branches_shown.remove(found_branches[in_branches[1]])
                     merge = True
 
-            current_version = versioning["versions"][version_name]
+            current_version = self._citymodel.versioning.versions[version_name]
 
-            branches = []
-            for branch_name, branch_ref in versioning["branches"].items():
-                if branch_ref == version_name:
-                    branches.append(branch_name)
-            
-            tags = []
-            for tag_name, tag_ref in versioning["tags"].items():
-                if tag_ref == version_name:
-                    tags.append(tag_name)
+            branches = current_version.branches
 
-            print_version(version_name, current_version, branches, tags, branch, len(branches_shown), divide, merge)
+            tags = current_version.tags
+
+            print_version(current_version, branch, len(branches_shown), divide, merge)
 
 class CheckoutCommand:
     def __init__(self, citymodel, version_name, output_file, **args):
