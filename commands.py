@@ -18,9 +18,10 @@ minimal_json = {
 }
 
 class LogCommand:
-    def __init__(self, citymodel, refs=["master"]):
+    def __init__(self, citymodel, refs=["master"], graph=False):
         self._citymodel = VersionedCityJSON(citymodel)
         self._refs = refs
+        self._graph = graph
 
     def set_refs(self, refs):
         """Set the refs to be used as end-points of the output graph."""
@@ -31,7 +32,9 @@ class LogCommand:
 
         version_count = len(self._citymodel.versioning.versions)
         if version_count > 0:
-            print("Found %s%d%s versions.\n" % (Fore.GREEN, version_count, Style.RESET_ALL))
+            print("Found {}{}{} versions.\n".format(Fore.GREEN,
+                                                    version_count,
+                                                    Style.RESET_ALL))
         else:
             print("No versions found. Doei!")
             return
@@ -40,7 +43,10 @@ class LogCommand:
         for ref in self._refs:
             history.add_versions(self._citymodel.versioning.resolve_ref(ref))
 
-        logger = GraphHistoryLog(history)
+        if self._graph:
+            logger = GraphHistoryLog(history)
+        else:
+            logger = SimpleHistoryLog(history)
 
         logger.print_all()
 

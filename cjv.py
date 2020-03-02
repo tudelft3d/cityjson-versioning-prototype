@@ -54,8 +54,9 @@ def process_pipeline(processor, input):
 
 @cli.command()
 @click.argument('refs', nargs=-1)
+@click.option('--graph', is_flag=True, help='show history as graph')
 @click.pass_context
-def log(context, refs):
+def log(context, refs, graph):
     """Prints the history of a versioned CityJSON file.
     
     REFs is a list of refs (ids, tags or branch names)
@@ -65,7 +66,7 @@ def log(context, refs):
     def processor(citymodel):
         vcm = citymodel
 
-        command = commands.LogCommand(vcm, refs)
+        command = commands.LogCommand(vcm, refs, graph)
         command.execute()
     return processor
 
