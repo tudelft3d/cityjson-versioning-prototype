@@ -110,6 +110,11 @@ class Version:
         """Returns the message of this version."""
         return self._json["message"]
 
+    @message.setter
+    def message(self, value):
+        """Updates the value of message."""
+        self._json["message"] = value
+
     @property
     def date(self):
         """Returns the date and time of this version."""
