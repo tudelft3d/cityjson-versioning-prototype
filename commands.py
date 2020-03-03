@@ -194,51 +194,55 @@ class RehashCommand:
             json.dump(cm.data, outfile)
 
 class CommitCommand:
-    def __init__(self, vcitymodel, in_file, ref, author, message, output_file, **args):
-        self._vcitymodel = vcitymodel
+    """Class that implements the commit command."""
+
+    def __init__(self, vcitymodel, in_file, ref, author, message, output_file):
+        self._vcitymodel = VersionedCityJSON(vcitymodel)
         self._input_file = in_file
         self._ref = ref
         self._author = author
         self._message = message
         self._output_file = output_file
-    
+
     def execute(self):
-        # TODO Also update the vertices
+        """Executes the commit command"""
         vcm = self._vcitymodel
         in_file = self._input_file
 
         parents = []
         parent_versionid = None
-        if len(vcm["versioning"]["versions"]) > 0:
-            parent_versionid = utils.find_version_from_ref(self._ref, vcm["versioning"])
+        if len(vcm.versioning.versions) > 0:
+            parent_versionid = vcm.versioning.get_version(self._ref)
             parents = [parent_versionid]
 
         new_citymodel = utils.load_cityjson(in_file)
 
         print("Appending vertices...")
-        offset = len(vcm["vertices"])
-        vcm["vertices"] += new_citymodel["vertices"]
-        for obj_id, obj in new_citymodel["CityObjects"].items():
+        offset = len(vcm.data["vertices"])
+        vcm.data["vertices"] += new_citymodel["vertices"]
+        for _, obj in new_citymodel["CityObjects"].items():
             for g in obj['geometry']:
                 utils.update_geom_indices_by_offset(g["boundaries"], offset)
 
         print("Removing duplicate vertices...")
-        newids, new_ver_count = utils.remove_duplicate_vertices(vcm, 3)
+        newids, _ = utils.remove_duplicate_vertices(vcm, 3)
 
         for obj_id, obj in new_citymodel["CityObjects"].items():
-                for g in obj['geometry']:
-                    utils.update_geom_indices_by_map(g["boundaries"], newids)
+            for g in obj['geometry']:
+                utils.update_geom_indices_by_map(g["boundaries"], newids)
 
-        new_objects = utils.convert_to_versioned_city_objects(new_citymodel["CityObjects"])
+        new_objects = (utils.convert_to_versioned_city_objects
+                       (new_citymodel["CityObjects"]))
 
         if parent_versionid is not None:
-            old_objects = utils.get_versioned_city_objects(vcm, parent_versionid)
-
+            parent_version = vcm.versioning.get_version(parent_versionid)
+            old_objects = parent_version.versioned_objects.keys()
             common_objects = set(new_objects).intersection(old_objects)
-            if len(common_objects) == len(new_objects) and len(common_objects) == len(old_objects):
+            if (len(common_objects) == len(new_objects) and
+                    len(common_objects) == len(old_objects)):
                 print("Nothing changed! Skipping this...")
                 return
-            
+
             utils.print_diff_of_versioned_objects(new_objects, old_objects)
 
         new_version = {
@@ -250,19 +254,21 @@ class CommitCommand:
         }
 
         for new_id, new_obj in new_objects.items():
-            vcm["CityObjects"][new_id] = new_obj
+            vcm.data["CityObjects"][new_id] = new_obj
             new_version["objects"].append(new_id)
-        
+
         new_versionid = utils.get_hash_of_object(new_version)
 
-        vcm["versioning"]["versions"][new_versionid] = new_version
-        
-        if utils.is_ref_branch(self._ref, vcm["versioning"]) or len(vcm["versioning"]["versions"]) == 1:
-            print("Updating {branch} to {commit}".format(branch=self._ref, commit=new_versionid))
-            vcm["versioning"]["branches"][self._ref] = new_versionid
-        
+        vcm.data["versioning"]["versions"][new_versionid] = new_version
+
+        if (vcm.versioning.is_brnach(self._ref) or
+                len(vcm.versioning.versions) == 1):
+            print("Updating {branch} to {commit}".format(branch=self._ref,
+                                                         commit=new_versionid))
+            vcm.data["versioning"]["branches"][self._ref] = new_versionid
+
         print("Saving to {0}...".format(self._output_file))
-        utils.save_cityjson(vcm, self._output_file)
+        utils.save_cityjson(vcm.data, self._output_file)
 
 class BranchCommand:
     """Class that creates a branch at a given ref"""

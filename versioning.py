@@ -24,6 +24,18 @@ class VersionedCityJSON:
         else:
             raise TypeError("Not a file or a dictionary.")
 
+    def __getitem__(self, key):
+        return self._citymodel[key]
+
+    def __setitem__(self, key, value):
+        self._citymodel[key] = value
+
+    def __iter__(self):
+        return self._citymodel.itervalues()
+
+    def __contains__(self, item):
+        return item in self._citymodel
+
     @property
     def versioning(self):
         """Returns the versioning aspect of CityJSON"""
@@ -84,6 +96,10 @@ class Versioning:
             return self._json["tags"][ref]
 
         raise KeyError("Ref is not available in versioning.")
+
+    def is_brnach(self, ref):
+        """Returns True if the ref is a branch."""
+        return ref in self._json["branches"]
 
     def get_version(self, ref):
         """Returns the version for the given ref."""
