@@ -86,7 +86,7 @@ class Versioning:
         candidates = [s for s in self.versions if s.startswith(ref)]
         if len(candidates) > 1:
             raise KeyError("{ref} is ambiguoush. Try with more characters!")
-        elif len(candidates) == 1:
+        if len(candidates) == 1:
             return candidates[0]
 
         if ref in self._json["branches"]:
@@ -97,7 +97,7 @@ class Versioning:
 
         raise KeyError("Ref is not available in versioning.")
 
-    def is_brnach(self, ref):
+    def is_branch(self, ref):
         """Returns True if the ref is a branch."""
         return ref in self._json["branches"]
 

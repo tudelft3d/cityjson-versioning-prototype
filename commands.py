@@ -212,7 +212,7 @@ class CommitCommand:
         parents = []
         parent_versionid = None
         if len(vcm.versioning.versions) > 0:
-            parent_versionid = vcm.versioning.get_version(self._ref)
+            parent_versionid = vcm.versioning.resolve_ref(self._ref)
             parents = [parent_versionid]
 
         new_citymodel = utils.load_cityjson(in_file)
@@ -236,7 +236,7 @@ class CommitCommand:
 
         if parent_versionid is not None:
             parent_version = vcm.versioning.get_version(parent_versionid)
-            old_objects = parent_version.versioned_objects.keys()
+            old_objects = parent_version.versioned_objects
             common_objects = set(new_objects).intersection(old_objects)
             if (len(common_objects) == len(new_objects) and
                     len(common_objects) == len(old_objects)):
@@ -261,7 +261,7 @@ class CommitCommand:
 
         vcm.data["versioning"]["versions"][new_versionid] = new_version
 
-        if (vcm.versioning.is_brnach(self._ref) or
+        if (vcm.versioning.is_branch(self._ref) or
                 len(vcm.versioning.versions) == 1):
             print("Updating {branch} to {commit}".format(branch=self._ref,
                                                          commit=new_versionid))
