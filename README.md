@@ -160,10 +160,10 @@ Let's do this together. We have an example dataset from Rotterdam Delfshaven.
     cjv rotterdam.json commit Examples/rotterdam/initial_deleted_building.json test-branch -m "Delete a building"
     ```
 
-5. You can check everything is fine with:
+5. You can check if everything is okay with:
 
     ```
-    cjv rotterdam.json log --graph
+    cjv rotterdam.json log master test-branch --graph
     ```
 
 6. Merge `test-branch` into `master`:
