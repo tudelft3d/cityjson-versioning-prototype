@@ -132,6 +132,54 @@ You can checkout a version to a regular CityJSON as follows:
 cjv Examples/buildingBeforeAndAfter.json checkout v30 buildingAtVersion30.json
 ```
 
+## Tutorial
+
+Let's do this together. We have an example dataset from Rotterdam Delfshaven.
+
+1. Create a versioned CityJSON file:
+
+    ```
+    cjv init commit Examples/rotterdam/initial.json -m "Initial commit" -o rotterdam.json
+    ```
+
+2. Create a new branch called `test-branch`:
+
+    ```
+    cjv rotterdam.json branch test-branch
+    ```
+
+3. Add the version with the moved roof in `master`:
+
+    ```
+    cjv rotterdam.json commit Examples/rotterdam/inital_moved_roof.json -m "Move a building's roof"
+    ```
+
+4. Add the version with the deleted building in `test-branch`:
+
+    ```
+    cjv rotterdam.json commit Examples/rotterdam/initial_deleted_building.json test-branch -m "Delete a building"
+    ```
+
+5. You can check everything is fine with:
+
+    ```
+    cjv rotterdam.json log --graph
+    ```
+
+6. Merge `test-branch` into `master`:
+
+    ```
+    cjv rotterdam.json merge test-branch master
+    ```
+
+7. Checkout the merged version:
+
+    ```
+    cjv rotterdam.json checkout master rotterdam_master.json
+    ```
+
+8. Use the plethora of CityJSON viewers to investigate the new model. And submits the bugs you'll find as issues. :)
+
 ## TODO
 
 - Add support for compressed CityJSONs.
