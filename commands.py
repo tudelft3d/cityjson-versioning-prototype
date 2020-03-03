@@ -76,7 +76,7 @@ class CheckoutCommand:
         output_file = self._output
 
         try:
-            version = cm.versioning.get_version_from_ref(ref)
+            version = cm.versioning.get_version(ref)
         except KeyError:
             print("Oh no! '{}' does not exist...".format(version.name))
             quit()
@@ -95,7 +95,7 @@ class CheckoutCommand:
 class DiffCommand:
     """Class that implements the diff command."""
 
-    def __init__(self, citymodel, new_version, old_version, **args):
+    def __init__(self, citymodel, new_version, old_version):
         self._citymodel = VersionedCityJSON(citymodel)
         self._new_version = new_version
         self._old_version = old_version
@@ -104,23 +104,28 @@ class DiffCommand:
         """Executes the diff command."""
         cm = self._citymodel
 
-        new_version = cm.versioning.get_version_from_ref(self._new_version)
-        old_version = cm.versioning.get_version_from_ref(self._old_version)
+        new_version = cm.versioning.get_version(self._new_version)
+        old_version = cm.versioning.get_version(self._old_version)
 
         new_objs = new_version.versioned_objects
         old_objs = old_version.versioned_objects
 
-        print("This is the diff between {commit_color}{new_version}{reset_style} and {commit_color}{old_version}{reset_style}".format(new_version=new_version, old_version=old_version, commit_color=Fore.YELLOW, reset_style=Style.RESET_ALL))
+        print("This is the diff between {commit_color}{new_version}"
+              "{reset_style} and {commit_color}{old_version}{reset_style}"
+              .format(new_version=new_version.name,
+                      old_version=old_version.name,
+                      commit_color=Fore.YELLOW,
+                      reset_style=Style.RESET_ALL))
 
         utils.print_diff_of_versioned_objects(new_objs, old_objs)
 
 class RehashCommand:
     """Class that implements the rehash command."""
 
-    def __init__(self, citymodel, output_file, **args):
-        self._citymodel = citymodel
+    def __init__(self, citymodel, output_file):
+        self._citymodel = VersionedCityJSON(citymodel)
         self._output = output_file
-    
+
     def execute(self):
         """Executes the rehash command."""
         cm = self._citymodel
@@ -128,62 +133,65 @@ class RehashCommand:
         # To keep the mapping between old and new keys
         keypairs = {}
         ver_keypairs = {}
-        
+
         print ("City Objects:")
 
         # Re-hash the city objects
         new_cityobjects = {}
-        for obj_key, obj in cm["CityObjects"].items():
-            #TODO Later we'll have to do that first for the second-layer objects and then for first ones
+        for obj_key, obj in cm.cityobjects.items():
+            #TODO Later we'll have to do that first for the second-layer objects
+            # and then for first ones
             new_key = utils.get_hash_of_object(obj)
             print("{newkey} <- {oldkey}".format(newkey=new_key, oldkey=obj_key))
             keypairs[obj_key] = new_key
 
-            new_cityobjects[new_key] = cm["CityObjects"][obj_key]
-        
+            new_cityobjects[new_key] = cm.cityobjects[obj_key]
+
         print("Versions:")
-        
-        dag = nx.DiGraph()
-        for branch, version in cm["versioning"]["branches"].items():
-            dag = utils.build_dag_from_version(dag, cm["versioning"]["versions"], version)
+
+        history = History(cm)
+        for branch, version in cm.versioning.branches.items():
+            history.add_versions(version.name)
+
+        dag = history.dag
 
         new_versions = {}
         sorted_keys = list(nx.topological_sort(dag))
         for ver_key in sorted_keys:
-            version = cm["versioning"]["versions"][ver_key]
+            version = cm.versioning.versions[ver_key]
             new_objects = []
-            for obj_key in version["objects"]:
+            for obj_key in version.versioned_objects:
                 new_objects.append(keypairs[obj_key])
-            version["objects"] = new_objects
+            version.data["objects"] = new_objects
 
-            if "parents" in version:
+            if version.has_parents:
                 new_parents = []
-                for parent_key in version["parents"]:
-                    new_parents.append(ver_keypairs[parent_key])
-                version["parents"] = new_parents
-            
-            new_key = utils.get_hash_of_object(version)
+                for parent in version.parents:
+                    new_parents.append(ver_keypairs[parent.name])
+                version.data["parents"] = new_parents
+
+            new_key = utils.get_hash_of_object(version.data)
             print("{newkey} <- {oldkey}".format(newkey=new_key, oldkey=ver_key))
 
-            new_versions[new_key] = version
+            new_versions[new_key] = version.data
             ver_keypairs[ver_key] = new_key
-        
+
         new_branches = {}
-        for branch, version in cm["versioning"]["branches"].items():
-            new_branches[branch] = ver_keypairs[version]
-        
+        for branch, version in cm.versioning.branches.items():
+            new_branches[branch] = ver_keypairs[version.name]
+
         new_tags = {}
-        for tag, version in cm["versioning"]["tags"].items():
-            new_tags[tag] = ver_keypairs[version]
-        
-        cm["CityObjects"] = new_cityobjects
-        cm["versioning"]["versions"] = new_versions
-        cm["versioning"]["branches"] = new_branches
-        cm["versioning"]["tags"] = new_tags
+        for tag, version in cm.versioning.tags.items():
+            new_tags[tag] = ver_keypairs[version.name]
+
+        cm.cityobjects = new_cityobjects
+        cm.data["versioning"]["versions"] = new_versions
+        cm.data["versioning"]["branches"] = new_branches
+        cm.data["versioning"]["tags"] = new_tags
 
         print("Saving as {0}...".format(self._output))
         with open(self._output, "w") as outfile:
-            json.dump(cm, outfile)
+            json.dump(cm.data, outfile)
 
 class CommitCommand:
     def __init__(self, vcitymodel, in_file, ref, author, message, output_file, **args):

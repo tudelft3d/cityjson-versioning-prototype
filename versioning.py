@@ -34,6 +34,16 @@ class VersionedCityJSON:
         """Returns the origina json data."""
         return self._citymodel
 
+    @property
+    def cityobjects(self):
+        """Returns the city objects."""
+        return self._citymodel["CityObjects"]
+
+    @cityobjects.setter
+    def cityobjects(self, value):
+        """Sets the city objects dictionary."""
+        self._citymodel["CityObjects"] = value
+
     def __repr__(self):
         return self._citymodel
 
@@ -46,13 +56,26 @@ class Versioning:
 
     @property
     def citymodel(self):
-        """Returns the citymodel"""
+        """Returns the citymodel."""
         return self._citymodel
+
+    @property
+    def data(self):
+        """Returns the original json data."""
+        return self._json
+
+    @data.setter
+    def data(self, value):
+        """Updates the json data."""
+        self._json = value
 
     def resolve_ref(self, ref):
         """Returns the version name for the given ref."""
-        if ref in self.versions:
-            return ref
+        candidates = [s for s in self.versions if s.startswith(ref)]
+        if len(candidates) > 1:
+            raise KeyError("{ref} is ambiguoush. Try with more characters!")
+        elif len(candidates) == 1:
+            return candidates[0]
 
         if ref in self._json["branches"]:
             return self._json["branches"][ref]
@@ -62,7 +85,7 @@ class Versioning:
 
         raise KeyError("Ref is not available in versioning.")
 
-    def get_version_from_ref(self, ref):
+    def get_version(self, ref):
         """Returns the version for the given ref."""
         return self.versions[self.resolve_ref(ref)]
 
@@ -146,11 +169,11 @@ class Version:
 
         new_objects = {}
         for obj_id in self._json["objects"]:
-            if obj_id not in cm.data["CityObjects"]:
+            if obj_id not in cm.cityobjects:
                 print("  Object '%s' not found! Skipping..." % obj_id)
                 continue
 
-            new_objects[obj_id] = cm.data["CityObjects"][obj_id]
+            new_objects[obj_id] = cm.cityobjects[obj_id]
 
         return new_objects
 
@@ -188,6 +211,11 @@ class Version:
                   if version.name == self._version_name]
 
         return result
+
+    @property
+    def data(self):
+        """Returns the original json data."""
+        return self._json
 
     def __repr__(self):
         repr_dict = self._json.copy()
