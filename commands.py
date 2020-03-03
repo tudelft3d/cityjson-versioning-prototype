@@ -80,7 +80,7 @@ class CheckoutCommand:
         except KeyError:
             print("Oh no! '{}' does not exist...".format(version.name))
             quit()
-        
+
         new_model = minimal_json
         print("Extracting version '%s'..." % version.name)
         new_objects = version.original_objects
@@ -278,20 +278,24 @@ class BranchCommand:
         self._ref = ref
         self._branch_name = branch_name
         self._output_file = output_file
-    
+
     def set_ref(self, ref):
+        """Set the ref to be used as point for the new branch."""
         self._ref = ref
 
     def execute(self):
+        """Executes the branch command."""
         vcm = self._citymodel
 
         version = utils.find_version_from_ref(self._ref, vcm["versioning"])
 
         if utils.is_ref_branch(self._branch_name, vcm["versioning"]):
-            print("Branch '{branch}' already exists! Nothing to do.".format(branch=self._branch_name))
+            print("Branch '{branch}' already exists! "
+                  "Nothing to do.".format(branch=self._branch_name))
             return
 
-        print("Creating '{branch}' at {version}...".format(branch=self._branch_name, version=version))
+        print("Creating '{branch}' at"
+              " {version}...".format(branch=self._branch_name, version=version))
 
         vcm["versioning"]["branches"][self._branch_name] = version
 
@@ -310,10 +314,12 @@ class BranchDeleteCommand:
         self._output_file = output_file
 
     def execute(self):
+        """Executes the delete branch command."""
         vcm = self._citymodel
 
         if not utils.is_ref_branch(self._branch_name, vcm["versioning"]):
-            print("Branch '{branch}' does not exist! Nothing to do.".format(branch=self._branch_name))
+            print("Branch '{branch}' does not exist! "
+                  "Nothing to do.".format(branch=self._branch_name))
             return
 
         del vcm["versioning"]["branches"][self._branch_name]
@@ -333,7 +339,7 @@ class MergeBranchesCommand:
         self._dest_branch = dest_branch
         self._author = author
         self._output_file = output
-    
+
     def execute(self):
         vcm = self._citymodel
         source_branch = self._source_branch
@@ -341,26 +347,26 @@ class MergeBranchesCommand:
 
         versioning = vcm["versioning"]
 
-        # if not is_ref_branch(source_branch, versioning):
-        #     print("Source branch '{branch}' does not exist! Nothing to do.".format(branch=self._source_branch))
-        #     return
-
-        # if not is_ref_branch(dest_branch, versioning):
-        #     print("Destination branch '{branch}' does not exist! Nothing to do.".format(branch=self._dest_branch))
-        #     return
-        
         source_version = utils.find_version_from_ref(source_branch, versioning)
         dest_version = utils.find_version_from_ref(dest_branch, versioning)
 
         dag = nx.DiGraph()
-        dag = utils.build_dag_from_version(dag, versioning["versions"], source_version)
-        dag = utils.build_dag_from_version(dag, versioning["versions"], dest_version)
+        dag = utils.build_dag_from_version(dag,
+                                           versioning["versions"],
+                                           source_version)
+        dag = utils.build_dag_from_version(dag,
+                                           versioning["versions"],
+                                           dest_version)
 
-        if (dest_version in nx.ancestors(dag, source_version)):
-            print("{dest_ref} is earlier than {source_ref}! Can't do this.".format(dest_ref=dest_branch, source_ref=source_branch))
+        if dest_version in nx.ancestors(dag, source_version):
+            print("{dest_ref} is earlier than {source_ref}! "
+                  "Can't do this.".format(dest_ref=dest_branch,
+                                          source_ref=source_branch))
             return
 
-        common_ancestor = nx.lowest_common_ancestor(dag, source_version, dest_version)
+        common_ancestor = nx.lowest_common_ancestor(dag,
+                                                    source_version,
+                                                    dest_version)
 
         print("Common ancestor: {}".format(common_ancestor))
 
@@ -399,13 +405,13 @@ class MergeBranchesCommand:
             "parents": [source_version, dest_version],
             "objects": objects
         }
-        
+
         new_versionid = utils.get_hash_of_object(new_version)
 
         vcm["versioning"]["versions"][new_versionid] = new_version
-        
+
         if utils.is_ref_branch(dest_branch, vcm["versioning"]):
             vcm["versioning"]["branches"][dest_branch] = new_versionid
-        
+
         print("Saving to {0}...".format(self._output_file))
         utils.save_cityjson(vcm, self._output_file)
