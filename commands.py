@@ -5,7 +5,7 @@ import json
 
 import networkx as nx
 # Code to have colors at the console output
-from colorama import Back, Fore, Style, init
+from colorama import Fore, Style, init
 
 import utils
 from graph import GraphHistoryLog, History, SimpleHistoryLog
@@ -341,6 +341,7 @@ class MergeBranchesCommand:
         self._output_file = output
 
     def execute(self):
+        """Executers the merge command."""
         vcm = self._citymodel
         source_branch = self._source_branch
         dest_branch = self._dest_branch
@@ -372,13 +373,20 @@ class MergeBranchesCommand:
 
         source_objects = utils.get_versioned_city_objects(vcm, source_version)
         dest_objects = utils.get_versioned_city_objects(vcm, dest_version)
-        ancestor_objects = utils.get_versioned_city_objects(vcm, common_ancestor)
+        ancestor_objects = utils.get_versioned_city_objects(vcm,
+                                                            common_ancestor)
 
-        source_changes = utils.get_diff_of_versioned_objects(source_objects, ancestor_objects)
-        dest_changes = utils.get_diff_of_versioned_objects(dest_objects, ancestor_objects)
+        source_changes = utils.get_diff_of_versioned_objects(source_objects,
+                                                             ancestor_objects)
+        dest_changes = utils.get_diff_of_versioned_objects(dest_objects,
+                                                           ancestor_objects)
 
-        source_ids_changed = set([k for k in source_changes["changed"].keys()]).union(set([k for k in source_changes["added"].keys()])).union(set([k for k in source_changes["removed"].keys()]))
-        dest_ids_changed = set([k for k in dest_changes["changed"].keys()]).union(set([k for k in dest_changes["added"].keys()])).union(set([k for k in dest_changes["removed"].keys()]))
+        source_ids_changed = ((k for k in source_changes["changed"])
+                              .union((k for k in source_changes["added"]))
+                              .union((k for k in source_changes["removed"])))
+        dest_ids_changed = ((k for k in dest_changes["changed"])
+                            .union((k for k in dest_changes["added"]))
+                            .union((k for k in dest_changes["removed"])))
 
         conflicts = source_ids_changed.intersection(dest_ids_changed)
         if len(conflicts) > 0:
@@ -387,14 +395,19 @@ class MergeBranchesCommand:
                 print("- {}".format(c))
             print("Forgive me for not being able to resolve them right now...")
             return
-                
-        objects = set([k for k in source_objects.keys()]).intersection([k for k in dest_objects.keys()])
-        
+
+        objects = ((k for k in source_objects)
+                   .intersection((k for k in dest_objects)))
+
         # Given that no conflicts exist I can do the following
-        objects = objects.union(set([k["new_id"] for k in source_changes["changed"].values()]))
-        objects = objects.union(set([k["new_id"] for k in dest_changes["changed"].values()]))
-        objects = objects.union(set([k["new_id"] for k in source_changes["added"].values()]))
-        objects = objects.union(set([k["new_id"] for k in dest_changes["added"].values()]))
+        objects = objects.union((k["new_id"]
+                                 for k in source_changes["changed"].values()))
+        objects = objects.union((k["new_id"]
+                                 for k in dest_changes["changed"].values()))
+        objects = objects.union((k["new_id"]
+                                 for k in source_changes["added"].values()))
+        objects = objects.union((k["new_id"]
+                                 for k in dest_changes["added"].values()))
 
         objects = list(objects)
 
