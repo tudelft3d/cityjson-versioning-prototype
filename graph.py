@@ -2,7 +2,7 @@
 
 import networkx as nx
 from colorama import Fore, Style
-from versioning import VersionedCityJSON, Version
+from versioning import VersionedCityJSON
 
 class History:
     """Class to represent the history of versions of a versioned city model"""
@@ -214,10 +214,13 @@ class GraphHistoryLog:
         print("  Date: {date}".format(date=version.date))
 
         print(lines_txt, end='')
-        msg = "  Message:\n{l}\n{}{l}\t{}{}\n{l}\n".format(Fore.CYAN,
-                                    ('\n' + lines_txt + '\t').join(version.message.splitlines(False)),
-                                    Style.RESET_ALL,
-                                    l=lines_txt)
+        msg = ("  Message:\n"
+               "{l}\n"
+               "{}{l}\t{}{}\n"
+               "{l}\n").format(Fore.CYAN,
+                               ('\n' + lines_txt + '\t').join(version.message.splitlines(False)),
+                               Style.RESET_ALL,
+                               l=lines_txt)
         print(msg, end='')
 
     def get_branch_lines_with_star(self, branch_i):
@@ -226,7 +229,7 @@ class GraphHistoryLog:
             times = len(self._branches_shown) - 1
         else:
             times = len(self._branches_shown)
-        
+
         result = "".join(['| ' for i in range(branch_i)])
         result += "* "
         result += "".join(['| ' for i in range(branch_i + 1, times)])
@@ -234,6 +237,7 @@ class GraphHistoryLog:
         return result
 
     def get_lines_of_branches(self):
+        """Returns the text with lines for the currently shown branchs."""
         return ''.join(['| ' for i in range(len(self._branches_shown))])
 
     def get_refs_string(self, refs, ref_color, reset_color):
