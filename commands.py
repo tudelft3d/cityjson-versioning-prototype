@@ -9,7 +9,7 @@ from colorama import Fore, Style, init
 
 import utils
 from graph import GraphHistoryLog, History, SimpleHistoryLog
-from versioning import VersionedCityJSON
+from cityjson.versioning import VersionedCityJSON
 
 init()
 

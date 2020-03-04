@@ -2,7 +2,7 @@
 
 import networkx as nx
 from colorama import Fore, Style
-from versioning import VersionedCityJSON
+from cityjson.versioning import VersionedCityJSON
 
 class History:
     """Class to represent the history of versions of a versioned city model"""

@@ -1,5 +1,5 @@
 import pytest
-import versioning as v
+import cityjson.versioning as v
 from utils import get_hash_of_object
 
 class TestVersion:
