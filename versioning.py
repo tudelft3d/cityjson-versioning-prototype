@@ -1,13 +1,33 @@
 """Module that contains logic to handle versioned CityJSON files"""
 
-from typing import Dict, List
+import abc
+import datetime
+import hashlib
 import json
+from typing import Dict, List
+
 import utils
+
+class Hashable(abc.ABC):
+    """Class that represents a hashable object."""
+
+    @property
+    @abc.abstractmethod
+    def data(self):
+        """Returns the original json data of the object."""
+
+    def hash(self):
+        """Computes the hash of the objects."""
+        encoded = json.dumps(self.data).encode('utf-8')
+        m = hashlib.new('sha1')
+        m.update(encoded)
+
+        return m.hexdigest()
 
 class VersionedCityJSON:
     """Class that represents a versioned CityJSON file."""
 
-    def __init__(self, file):
+    def __init__(self, file=None):
         if file is None:
             self._citymodel = utils.create_vcityjson()
         elif isinstance(file, str):
@@ -62,9 +82,16 @@ class VersionedCityJSON:
 class Versioning:
     """Class that represents the versioning aspect of a CityJSON file."""
 
-    def __init__(self, citymodel, data: dict):
+    def __init__(self, citymodel, data: dict = None):
         self._citymodel = citymodel
-        self._json = data
+        if data is None:
+            self._json = {
+                "versions": {},
+                "branches": {},
+                "tags": {}
+            }
+        else:
+            self._json = data
 
     @property
     def citymodel(self):
@@ -132,12 +159,20 @@ class Versioning:
     def __repr__(self):
         return str(self._json)
 
-class Version:
+class Version(Hashable):
     """Class that represent a CityJSON version."""
 
-    def __init__(self, versioning, data: dict, version_name=None):
+    _date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
+
+    def __init__(self,
+                 versioning: 'Versioning',
+                 data: dict = None,
+                 version_name: str = None):
         self._versioning = versioning
-        self._json = data
+        if data is None:
+            self._json = {}
+        else:
+            self._json = data
 
         if version_name is None:
             self._version_name = utils.get_hash_of_object(data)
@@ -149,10 +184,20 @@ class Version:
         """Returns the id of this version."""
         return self._version_name
 
+    @name.setter
+    def name(self, value):
+        """Updates the id of this version."""
+        self._version_name = value
+
     @property
     def author(self):
         """Returns the author of this version."""
         return self._json["author"]
+
+    @author.setter
+    def author(self, value: str):
+        """Updates the author of this version."""
+        self._json["author"] = value
 
     @property
     def message(self):
@@ -160,14 +205,19 @@ class Version:
         return self._json["message"]
 
     @message.setter
-    def message(self, value):
+    def message(self, value: str):
         """Updates the value of message."""
         self._json["message"] = value
 
     @property
     def date(self):
         """Returns the date and time of this version."""
-        return self._json["date"]
+        return datetime.datetime.strptime(self._json["date"], self._date_format)
+
+    @date.setter
+    def date(self, value: datetime.datetime):
+        """Updates the date and time of this version."""
+        self._json["date"] = value.strftime(self._date_format)
 
     @property
     def parents(self) -> List['Version']:

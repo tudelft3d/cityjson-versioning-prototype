@@ -33,11 +33,6 @@ class History:
         """Returns the dag object."""
         return self._dag
 
-    @property
-    def leafs(self):
-        """Returns the list of leafs of this history."""
-        return self._leafs
-
 class SimpleHistoryLog:
     """Class to print a simple list log of a History."""
 
