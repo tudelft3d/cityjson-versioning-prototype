@@ -61,6 +61,15 @@ class CityObjectDict:
     def __setitem__(self, key: str, value: 'CityObject'):
         self._data[key] = value._data
 
+    def __len__(self):
+        return len(self._data)
+
+    def __iter__(self):
+        return self._data.itervalues()
+
+    def __contains__(self, item):
+        return item in self._data
+
 class CityObject:
     """Class that represents a city object in CityJSON."""
 

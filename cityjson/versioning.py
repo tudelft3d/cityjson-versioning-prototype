@@ -6,7 +6,7 @@ import hashlib
 import json
 from typing import Dict, List
 
-from cityjson.citymodel import CityJSON
+from cityjson.citymodel import CityJSON, CityObject
 import utils
 
 class Hashable(abc.ABC):
@@ -48,7 +48,7 @@ class Versioning:
             self._json = data
 
     @property
-    def citymodel(self):
+    def citymodel(self) -> 'VersionedCityJSON':
         """Returns the citymodel."""
         return self._citymodel
 
@@ -116,6 +116,9 @@ class Versioning:
 class Version(Hashable):
     """Class that represent a CityJSON version."""
 
+    _empty_version = {
+        "objects": {}
+    }
     _date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
 
     def __init__(self,
@@ -124,7 +127,7 @@ class Version(Hashable):
                  version_name: str = None):
         self._versioning = versioning
         if data is None:
-            self._json = {}
+            self._json = self._empty_version
         else:
             self._json = data
 
@@ -182,20 +185,26 @@ class Version(Hashable):
 
         return []
 
+    def add_parent(self, value: 'Version'):
+        """Adds a parent version to this version."""
+        self._json["parents"].append(value.name)
+
     @property
     def versioned_objects(self):
-        """Returns the dictionary of the versioned city objects."""
+        """Returns a list of versioned city objects."""
         cm = self._versioning.citymodel
 
-        new_objects = {}
-        for obj_id in self._json["objects"]:
-            if obj_id not in cm.cityobjects:
+        result = []
+        for vobj_id, obj_id in self._json["objects"].items():
+            if vobj_id not in cm.cityobjects:
                 print("  Object '%s' not found! Skipping..." % obj_id)
                 continue
 
-            new_objects[obj_id] = cm.cityobjects[obj_id]
+            obj = CityObject(cm.cityobjects[vobj_id].data, obj_id)
+            vobj = VersionedCityObject(obj, vobj_id)
+            result.append(vobj)
 
-        return new_objects
+        return result
 
     @property
     def original_objects(self):
@@ -209,6 +218,13 @@ class Version(Hashable):
             new_objects[new_id] = obj
 
         return new_objects
+
+    def add_cityobject(self, value: 'VersionedCityObject'):
+        """Adds the provided versioned city object to the version."""
+        self._json["objects"][value.name] = value.original_cityobject.name
+
+        cm = self._versioning.citymodel["CityObjects"]
+        cm[value.name] = value.original_cityobject.data
 
     def has_parents(self):
         """Returns 'True' if the version has parents, otherwise 'False'."""
@@ -253,7 +269,7 @@ class VersionedCityObject(Hashable):
             self._name = name
 
     @property
-    def original_cityobject(self):
+    def original_cityobject(self) -> 'CityObject':
         """Returns the original city object."""
         return self._cityobject
 
