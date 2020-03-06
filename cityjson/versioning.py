@@ -38,6 +38,7 @@ class Versioning:
 
     def __init__(self, citymodel, data: dict = None):
         self._citymodel = citymodel
+        self._date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
         if data is None:
             self._json = {
                 "versions": {},
@@ -116,18 +117,15 @@ class Versioning:
 class Version(Hashable):
     """Class that represent a CityJSON version."""
 
-    _empty_version = {
-        "objects": {}
-    }
-    _date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
-
     def __init__(self,
                  versioning: 'Versioning',
                  data: dict = None,
                  version_name: str = None):
         self._versioning = versioning
         if data is None:
-            self._json = self._empty_version
+            self._json = {
+                "objects": {}
+            }
         else:
             self._json = data
 
@@ -190,7 +188,7 @@ class Version(Hashable):
         self._json["parents"].append(value.name)
 
     @property
-    def versioned_objects(self):
+    def versioned_objects(self) -> List['VersionedCityObject']:
         """Returns a list of versioned city objects."""
         cm = self._versioning.citymodel
 
@@ -205,19 +203,6 @@ class Version(Hashable):
             result.append(vobj)
 
         return result
-
-    @property
-    def original_objects(self):
-        """Returns the dictionary of the original city objects."""
-        objs = self.versioned_objects
-
-        new_objects = {}
-        for _, obj in objs.items():
-            new_id = obj["cityobject_id"]
-            del obj["cityobject_id"]
-            new_objects[new_id] = obj
-
-        return new_objects
 
     def add_cityobject(self, value: 'VersionedCityObject'):
         """Adds the provided versioned city object to the version."""
@@ -268,6 +253,12 @@ class VersionedCityObject(Hashable):
         else:
             self._name = name
 
+    def __eq__(self, obj):
+        return self.hash() == obj.hash()
+
+    def __hash__(self):
+        return int(self.hash(), 16)
+
     @property
     def original_cityobject(self) -> 'CityObject':
         """Returns the original city object."""
@@ -281,3 +272,81 @@ class VersionedCityObject(Hashable):
     def name(self):
         """Returns the name of the city object."""
         return self._name
+
+class SimpleVersionDiff:
+    """Class that implements the calculation of a diff of two versions."""
+
+    def __init__(self, source_version: 'Version', dest_version: 'Version'):
+        self._source_version = source_version
+        self._dest_version = dest_version
+        self._result = VersionsDiffResult()
+
+    def find_common(self, new_objects):
+        """Find the common objects between two lists of hashes."""
+
+        source_objs = {obj.original_cityobject.name: obj.name
+                       for obj in self._source_version.versioned_objects}
+
+        # If a new object is also found in the source version, then it's changed
+        common_ids = [dest_objs[obj_id]
+                      for obj_id in new_objects
+                      if obj_id in source_objs]
+
+    def compute(self):
+        """Computes the diff of the provided versions."""
+
+        new_objects = (set(self._dest_version.versioned_objects) -
+                       set(self._source_version.versioned_objects))
+
+        old_objects = (set(self._source_version.versioned_objects) -
+                       set(self._dest_version.versioned_objects))
+
+        same_objects = (set(self._dest_version.versioned_objects).intersection(
+                        set(self._source_version.versioned_objects)))
+
+        new_names = {obj.original_cityobject.name: obj
+                     for obj in new_objects}
+        old_names = {obj.original_cityobject.name: obj
+                     for obj in old_objects}
+
+        # new_objects might contain changed ones
+        common_names = set(obj.original_cityobject.name for obj in new_objects
+                           if obj.original_cityobject.name in old_names)
+
+        new_objects = set(obj for obj in new_objects
+                          if obj.original_cityobject.name not in common_names)
+        old_objects = set(obj for obj in old_objects
+                          if obj.original_cityobject.name not in common_names)
+
+        result = VersionsDiffResult()
+
+        for obj_id in common_names:
+            result.changed[obj_id] = {
+                "source": new_names[obj_id],
+                "dest": old_names[obj_id]
+            }
+
+        for obj in new_objects:
+            result.added[obj.original_cityobject.name] = obj
+
+        for obj in old_objects:
+            result.removed[obj.original_cityobject.name] = obj
+
+        for obj in same_objects:
+            result.unchanged[obj.original_cityobject.name] = obj
+
+        return result
+
+class VersionsDiffResult:
+    """Class that represents a versions' diff result."""
+
+    changed = Dict[str, Dict[str, Version]]
+    added = Dict[str, Version]
+    removed = Dict[str, Version]
+    unchanged = Dict[str, Version]
+
+    def __init__(self):
+        self.changed = {}
+        self.added = {}
+        self.removed = {}
+        self.unchanged = {}
