@@ -55,7 +55,7 @@ class CityObjectDict:
     def __init__(self, data: dict):
         self._data = data
 
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> 'CityObject':
         return CityObject(self._data[key], key)
 
     def __setitem__(self, key: str, value: 'CityObject'):
@@ -65,7 +65,13 @@ class CityObjectDict:
         return len(self._data)
 
     def __iter__(self):
-        return self._data.itervalues()
+        return self._data.__iter__()
+
+    def items(self):
+        return self._data.items()
+
+    def values(self):
+        return self._data.values()
 
     def __contains__(self, item):
         return item in self._data

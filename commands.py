@@ -10,6 +10,8 @@ from colorama import Fore, Style, init
 import utils
 from graph import GraphHistoryLog, History, SimpleHistoryLog
 from cityjson.versioning import VersionedCityJSON, SimpleVersionDiff
+import cityjson.versioning as cjv
+import cityjson.citymodel as cjm
 
 init()
 
@@ -209,13 +211,11 @@ class CommitCommand:
         vcm = self._vcitymodel
         in_file = self._input_file
 
-        parents = []
         parent_versionid = None
         if len(vcm.versioning.versions) > 0:
             parent_versionid = vcm.versioning.resolve_ref(self._ref)
-            parents = [parent_versionid]
 
-        new_citymodel = utils.load_cityjson(in_file)
+        new_citymodel = cjm.CityJSON(in_file)
 
         print("Appending vertices...")
         offset = len(vcm.data["vertices"])
@@ -231,41 +231,34 @@ class CommitCommand:
             for g in obj['geometry']:
                 utils.update_geom_indices_by_map(g["boundaries"], newids)
 
-        new_objects = (utils.convert_to_versioned_city_objects
-                       (new_citymodel["CityObjects"]))
+        new_version = cjv.Version(vcm.versioning)
+        new_version.author = self._author
+        new_version.date = datetime.datetime.now()
+        new_version.message = self._message
+
+        for obj_id, obj in new_citymodel.cityobjects.items():
+            new_object = cjv.VersionedCityObject(cjm.CityObject(obj, obj_id))
+            new_version.add_cityobject(new_object)
 
         if parent_versionid is not None:
             parent_version = vcm.versioning.get_version(parent_versionid)
-            old_objects = parent_version.versioned_objects
-            common_objects = set(new_objects).intersection(old_objects)
-            if (len(common_objects) == len(new_objects) and
-                    len(common_objects) == len(old_objects)):
+            diff = cjv.SimpleVersionDiff(parent_version, new_version)
+            result = diff.compute()
+            if (len(result.added) == 0 and
+                    len(result.removed) == 0 and
+                    len(result.changed) == 0):
                 print("Nothing changed! Skipping this...")
                 return
 
-            utils.print_diff_of_versioned_objects(new_objects, old_objects)
-
-        new_version = {
-            "author": self._author,
-            "date": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            "message": self._message,
-            "parents": parents,
-            "objects": []
-        }
-
-        for new_id, new_obj in new_objects.items():
-            vcm.data["CityObjects"][new_id] = new_obj
-            new_version["objects"].append(new_id)
-
-        new_versionid = utils.get_hash_of_object(new_version)
-
-        vcm.data["versioning"]["versions"][new_versionid] = new_version
+            result.print()
+            new_version.add_parent(parent_versionid)
+        vcm.versioning.add_version(new_version)
 
         if (vcm.versioning.is_branch(self._ref) or
                 len(vcm.versioning.versions) == 1):
-            print("Updating {branch} to {commit}".format(branch=self._ref,
-                                                         commit=new_versionid))
-            vcm.data["versioning"]["branches"][self._ref] = new_versionid
+            print("Updating {branch} to {id}".format(branch=self._ref,
+                                                     id=new_version.name))
+            vcm.versioning.set_branch(self._ref, new_version)
 
         print("Saving to {0}...".format(self._output_file))
         utils.save_cityjson(vcm.data, self._output_file)

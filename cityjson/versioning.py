@@ -95,6 +95,12 @@ class Versioning:
                     in self._json["versions"].items()}
         return versions
 
+    def add_version(self, new_version: 'Version'):
+        """Adds version to the city model."""
+        if new_version.name is None:
+            new_version.name = new_version.hash()
+        self._json["versions"][new_version.name] = new_version.data
+
     @property
     def branches(self) -> Dict[str, 'Version']:
         """Returns a dictionary of branches."""
@@ -102,6 +108,10 @@ class Versioning:
                     for k, j
                     in self._json["branches"].items()}
         return branches
+
+    def set_branch(self, branch_name: str, version: 'Version'):
+        """Sets the branch to a specific version."""
+        self._json["branches"][branch_name] = version.name
 
     @property
     def tags(self) -> Dict[str, 'Version']:
