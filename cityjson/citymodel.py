@@ -1,0 +1,94 @@
+"""Module that describes the handle simple CityJSON city models."""
+
+import json
+
+import utils
+
+class CityJSON:
+    """Class that represents a CityJSON city model."""
+
+    def __init__(self, file=None):
+        if file is None:
+            self._citymodel = utils.create_vcityjson()
+        elif isinstance(file, str):
+            cityjson_data = open(file)
+            try:
+                citymodel = json.load(cityjson_data)
+            except:
+                raise TypeError("Not a JSON file!")
+            cityjson_data.close()
+
+            self._citymodel = citymodel
+        elif isinstance(file, dict):
+            self._citymodel = file
+        else:
+            raise TypeError("Not a file or a dictionary.")
+
+    @property
+    def data(self):
+        """Returns the origina json data."""
+        return self._citymodel
+
+    @property
+    def cityobjects(self):
+        """Returns the city objects."""
+        return CityObjectDict(self._citymodel["CityObjects"])
+
+    def __repr__(self):
+        return self._citymodel
+
+    def __getitem__(self, key):
+        return self._citymodel[key]
+
+    def __setitem__(self, key, value):
+        self._citymodel[key] = value
+
+    def __iter__(self):
+        return self._citymodel.itervalues()
+
+    def __contains__(self, item):
+        return item in self._citymodel
+
+class CityObjectDict:
+    """Wrapper class for a dict of city objects."""
+
+    def __init__(self, data: dict):
+        self._data = data
+
+    def __getitem__(self, key: str):
+        return CityObject(self._data[key], key)
+
+    def __setitem__(self, key: str, value: 'CityObject'):
+        self._data[key] = value._data
+
+class CityObject:
+    """Class that represents a city object in CityJSON."""
+
+    def __init__(self, data: dict = None, name: str = None):
+        self._data = data
+        self._name = name
+
+    @property
+    def name(self):
+        """Returns the id of the city object."""
+        return self._name
+
+    @property
+    def data(self):
+        """Returns the original dict of the city object."""
+        return self._data
+
+    def __repr__(self):
+        return self._data
+
+    def __getitem__(self, key):
+        return self._data[key]
+
+    def __setitem__(self, key, value):
+        self._data[key] = value
+
+    def __iter__(self):
+        return self._data.itervalues()
+
+    def __contains__(self, item):
+        return item in self._data

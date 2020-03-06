@@ -6,6 +6,7 @@ import hashlib
 import json
 from typing import Dict, List
 
+from cityjson.citymodel import CityJSON, CityObject
 import utils
 
 class Hashable(abc.ABC):
@@ -24,60 +25,13 @@ class Hashable(abc.ABC):
 
         return m.hexdigest()
 
-class VersionedCityJSON:
+class VersionedCityJSON(CityJSON):
     """Class that represents a versioned CityJSON file."""
-
-    def __init__(self, file=None):
-        if file is None:
-            self._citymodel = utils.create_vcityjson()
-        elif isinstance(file, str):
-            cityjson_data = open(file)
-            try:
-                citymodel = json.load(cityjson_data)
-            except:
-                raise TypeError("Not a JSON file!")
-            cityjson_data.close()
-
-            self._citymodel = citymodel
-        elif isinstance(file, dict):
-            self._citymodel = file
-        else:
-            raise TypeError("Not a file or a dictionary.")
-
-    def __getitem__(self, key):
-        return self._citymodel[key]
-
-    def __setitem__(self, key, value):
-        self._citymodel[key] = value
-
-    def __iter__(self):
-        return self._citymodel.itervalues()
-
-    def __contains__(self, item):
-        return item in self._citymodel
 
     @property
     def versioning(self):
         """Returns the versioning aspect of CityJSON"""
         return Versioning(self, self._citymodel["versioning"])
-
-    @property
-    def data(self):
-        """Returns the origina json data."""
-        return self._citymodel
-
-    @property
-    def cityobjects(self):
-        """Returns the city objects."""
-        return self._citymodel["CityObjects"]
-
-    @cityobjects.setter
-    def cityobjects(self, value):
-        """Sets the city objects dictionary."""
-        self._citymodel["CityObjects"] = value
-
-    def __repr__(self):
-        return self._citymodel
 
 class Versioning:
     """Class that represents the versioning aspect of a CityJSON file."""
@@ -287,3 +241,26 @@ class Version(Hashable):
         repr_dict = self._json.copy()
         del repr_dict["objects"]
         return str(repr_dict)
+
+class VersionedCityObject(Hashable):
+    """Class that represents a versioned city object."""
+
+    def __init__(self, cityobject: 'CityObject', name: str = None):
+        self._cityobject = cityobject
+        if name is None:
+            self._name = self.hash()
+        else:
+            self._name = name
+
+    @property
+    def original_cityobject(self):
+        """Returns the original city object."""
+        return self._cityobject
+
+    @property
+    def data(self):
+        return self._cityobject.data
+
+    @property
+    def name(self):
+        return self._name
