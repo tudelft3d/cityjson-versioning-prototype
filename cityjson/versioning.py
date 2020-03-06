@@ -6,6 +6,7 @@ import hashlib
 import json
 from typing import Dict, List
 
+from colorama import Fore, Style
 from cityjson.citymodel import CityJSON, CityObject
 import utils
 
@@ -38,7 +39,6 @@ class Versioning:
 
     def __init__(self, citymodel, data: dict = None):
         self._citymodel = citymodel
-        self._date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
         if data is None:
             self._json = {
                 "versions": {},
@@ -122,10 +122,13 @@ class Version(Hashable):
                  data: dict = None,
                  version_name: str = None):
         self._versioning = versioning
+        self._date_format = "%Y-%m-%dT%H:%M:%S.%fZ"
         if data is None:
             self._json = {
                 "objects": {}
             }
+        elif isinstance(data["objects"], list):
+            raise Exception("This is an old versioning file!")
         else:
             self._json = data
 
@@ -193,9 +196,9 @@ class Version(Hashable):
         cm = self._versioning.citymodel
 
         result = []
-        for vobj_id, obj_id in self._json["objects"].items():
+        for obj_id, vobj_id in self._json["objects"].items():
             if vobj_id not in cm.cityobjects:
-                print("  Object '%s' not found! Skipping..." % obj_id)
+                print("  Object '%s' not found! Skipping..." % vobj_id)
                 continue
 
             obj = CityObject(cm.cityobjects[vobj_id].data, obj_id)
@@ -206,7 +209,7 @@ class Version(Hashable):
 
     def add_cityobject(self, value: 'VersionedCityObject'):
         """Adds the provided versioned city object to the version."""
-        self._json["objects"][value.name] = value.original_cityobject.name
+        self._json["objects"][value.original_cityobject.name] = value.name
 
         cm = self._versioning.citymodel["CityObjects"]
         cm[value.name] = value.original_cityobject.data
@@ -281,17 +284,6 @@ class SimpleVersionDiff:
         self._dest_version = dest_version
         self._result = VersionsDiffResult()
 
-    def find_common(self, new_objects):
-        """Find the common objects between two lists of hashes."""
-
-        source_objs = {obj.original_cityobject.name: obj.name
-                       for obj in self._source_version.versioned_objects}
-
-        # If a new object is also found in the source version, then it's changed
-        common_ids = [dest_objs[obj_id]
-                      for obj_id in new_objects
-                      if obj_id in source_objs]
-
     def compute(self):
         """Computes the diff of the provided versions."""
 
@@ -340,13 +332,41 @@ class SimpleVersionDiff:
 class VersionsDiffResult:
     """Class that represents a versions' diff result."""
 
-    changed = Dict[str, Dict[str, Version]]
-    added = Dict[str, Version]
-    removed = Dict[str, Version]
-    unchanged = Dict[str, Version]
-
     def __init__(self):
-        self.changed = {}
-        self.added = {}
-        self.removed = {}
-        self.unchanged = {}
+        self.changed: Dict[str, Dict[str, Version]] = {}
+        self.added: Dict[str, Version] = {}
+        self.removed: Dict[str, Version] = {}
+        self.unchanged: Dict[str, Version] = {}
+
+    def print(self):
+        """Prints the diff to the output console."""
+        print("\nChanges:\n")
+
+        if len(self.changed) > 0:
+            print("{color}".format(color=Fore.BLUE), end='')
+            for obj_name, objs in self.changed.items():
+                print("\tchanged: {id} ({old_hash} -> {new_hash})"
+                      .format(id=obj_name,
+                              old_hash=trim_string(objs["source"].name),
+                              new_hash=trim_string(objs["dest"].name)))
+        if len(self.added) > 0:
+            print("{color}".format(color=Fore.GREEN), end='')
+            for obj_name, obj in self.added.items():
+                print("\tadded: {id} ({hash})"
+                      .format(id=obj_name, hash=trim_string(obj.name)))
+        if len(self.removed) > 0:
+            print("{color}".format(color=Fore.RED), end='')
+            for obj_name, obj in self.removed.items():
+                print("\tremoved: {id} ({hash})"
+                      .format(id=obj_name, hash=trim_string(obj.name)))
+
+        if len(self.unchanged) > 0:
+            print("{color}\n{objcount} objects not changed.\n"
+                  .format(color=Style.RESET_ALL, objcount=len(self.unchanged)))
+
+def trim_string(text, width=15, suffix=".."):
+    """Trims a string at the given width."""
+    if len(text) > width:
+        return "{text}{suffix}".format(text=text[:width], suffix=suffix)
+
+    return text

@@ -144,3 +144,17 @@ class TestSimpleVersionDiff:
         assert len(result.added) == 0
         assert len(result.removed) == 0
         assert len(result.unchanged) == 0
+
+    def test_dummy_data(self):
+        """Are changes in the dummy file detected correctly?"""
+        cm = cjv.VersionedCityJSON("Examples/dummy/buildingBeforeAndAfter.json")
+        v30 = cm.versioning.get_version("v30")
+        v29 = cm.versioning.get_version("v29")
+
+        diff = cjv.SimpleVersionDiff(v29, v30)
+        result = diff.compute()
+
+        assert len(result.changed) == 0
+        assert len(result.added) == 0
+        assert len(result.removed) == 1
+        assert len(result.unchanged) == 0
