@@ -6,11 +6,11 @@ import hashlib
 import json
 from typing import Dict, List
 
-from cityjson.citymodel import CityJSON, CityObject
+from cityjson.citymodel import CityJSON
 import utils
 
 class Hashable(abc.ABC):
-    """Class that represents a hashable object."""
+    """Abstract class that represents a hashable object."""
 
     @property
     @abc.abstractmethod
