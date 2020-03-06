@@ -279,4 +279,5 @@ class VersionedCityObject(Hashable):
 
     @property
     def name(self):
+        """Returns the name of the city object."""
         return self._name
