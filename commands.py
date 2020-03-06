@@ -9,7 +9,7 @@ from colorama import Fore, Style, init
 
 import utils
 from graph import GraphHistoryLog, History, SimpleHistoryLog
-from cityjson.versioning import VersionedCityJSON
+from cityjson.versioning import VersionedCityJSON, SimpleVersionDiff
 
 init()
 
@@ -107,8 +107,8 @@ class DiffCommand:
         new_version = cm.versioning.get_version(self._new_version)
         old_version = cm.versioning.get_version(self._old_version)
 
-        new_objs = new_version.versioned_objects
-        old_objs = old_version.versioned_objects
+        diff = SimpleVersionDiff(old_version, new_version)
+        result = diff.compute()
 
         print("This is the diff between {commit_color}{new_version}"
               "{reset_style} and {commit_color}{old_version}{reset_style}"
@@ -117,7 +117,7 @@ class DiffCommand:
                       commit_color=Fore.YELLOW,
                       reset_style=Style.RESET_ALL))
 
-        utils.print_diff_of_versioned_objects(new_objs, old_objs)
+        result.print()
 
 class RehashCommand:
     """Class that implements the rehash command."""
