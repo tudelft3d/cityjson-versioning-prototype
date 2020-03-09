@@ -85,9 +85,11 @@ class CheckoutCommand:
 
         new_model = minimal_json
         print("Extracting version '%s'..." % version.name)
-        new_objects = version.original_objects
+        new_objects = version.versioned_objects
 
-        new_model["CityObjects"] = new_objects
+        new_model["CityObjects"] = {obj.original_cityobject.name:
+                                    obj.original_cityobject.data
+                                    for obj in new_objects}
         new_model["vertices"] = cm.data["vertices"]
 
         print("Saving {0}...".format(output_file))
@@ -411,8 +413,9 @@ class MergeBranchesCommand:
         new_version.name = new_version.hash()
         vcm.versioning.add_version(new_version)
 
-        if utils.is_ref_branch(dest_branch, vcm["versioning"]):
-            vcm["versioning"]["branches"][dest_branch] = new_version.name
+        if vcm.versioning.is_branch(dest_branch):
+            print("Moving {} to {}".format(dest_branch, new_version.name))
+            vcm.versioning.set_branch(dest_branch, new_version)
 
         print("Saving to {0}...".format(self._output_file))
         utils.save_cityjson(vcm.data, self._output_file)

@@ -327,8 +327,8 @@ class SimpleVersionDiff:
 
         for obj_id in common_names:
             result.changed[obj_id] = {
-                "source": new_names[obj_id],
-                "dest": old_names[obj_id]
+                "source": old_names[obj_id],
+                "dest": new_names[obj_id]
             }
 
         for obj in new_objects:
