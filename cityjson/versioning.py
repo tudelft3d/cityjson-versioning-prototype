@@ -143,7 +143,7 @@ class Version(Hashable):
             self._json = data
 
         if version_name is None:
-            self._version_name = utils.get_hash_of_object(data)
+            self._version_name = self.hash
         else:
             self._version_name = version_name
 
@@ -297,7 +297,7 @@ class SimpleVersionDiff:
         self._dest_version = dest_version
         self._result = VersionsDiffResult()
 
-    def compute(self):
+    def compute(self) -> 'VersionsDiffResult':
         """Computes the diff of the provided versions."""
 
         new_objects = (set(self._dest_version.versioned_objects) -
@@ -346,10 +346,10 @@ class VersionsDiffResult:
     """Class that represents a versions' diff result."""
 
     def __init__(self):
-        self.changed: Dict[str, Dict[str, Version]] = {}
-        self.added: Dict[str, Version] = {}
-        self.removed: Dict[str, Version] = {}
-        self.unchanged: Dict[str, Version] = {}
+        self.changed: Dict[str, Dict[str, VersionedCityObject]] = {}
+        self.added: Dict[str, VersionedCityObject] = {}
+        self.removed: Dict[str, VersionedCityObject] = {}
+        self.unchanged: Dict[str, VersionedCityObject] = {}
 
     def print(self):
         """Prints the diff to the output console."""

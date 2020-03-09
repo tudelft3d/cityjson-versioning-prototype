@@ -328,7 +328,7 @@ class MergeBranchesCommand:
     """Class that merges two branches"""
 
     def __init__(self, citymodel, source_branch, dest_branch, author, output):
-        self._citymodel = citymodel
+        self._citymodel = VersionedCityJSON(citymodel)
         self._source_branch = source_branch
         self._dest_branch = dest_branch
         self._author = author
@@ -340,47 +340,41 @@ class MergeBranchesCommand:
         source_branch = self._source_branch
         dest_branch = self._dest_branch
 
-        versioning = vcm["versioning"]
+        source_version = vcm.versioning.get_version(source_branch)
+        dest_version = vcm.versioning.get_version(dest_branch)
 
-        source_version = utils.find_version_from_ref(source_branch, versioning)
-        dest_version = utils.find_version_from_ref(dest_branch, versioning)
+        history = History(vcm)
+        history.add_versions(source_version.name)
+        history.add_versions(dest_version.name)
 
-        dag = nx.DiGraph()
-        dag = utils.build_dag_from_version(dag,
-                                           versioning["versions"],
-                                           source_version)
-        dag = utils.build_dag_from_version(dag,
-                                           versioning["versions"],
-                                           dest_version)
+        dag = history.dag
 
-        if dest_version in nx.ancestors(dag, source_version):
+        if dest_version.name in nx.ancestors(dag, source_version.name):
             print("{dest_ref} is earlier than {source_ref}! "
                   "Can't do this.".format(dest_ref=dest_branch,
                                           source_ref=source_branch))
             return
 
         common_ancestor = nx.lowest_common_ancestor(dag,
-                                                    source_version,
-                                                    dest_version)
+                                                    source_version.name,
+                                                    dest_version.name)
 
         print("Common ancestor: {}".format(common_ancestor))
 
-        source_objects = utils.get_versioned_city_objects(vcm, source_version)
-        dest_objects = utils.get_versioned_city_objects(vcm, dest_version)
-        ancestor_objects = utils.get_versioned_city_objects(vcm,
-                                                            common_ancestor)
+        ancestor_version = vcm.versioning.get_version(common_ancestor)
 
-        source_changes = utils.get_diff_of_versioned_objects(source_objects,
-                                                             ancestor_objects)
-        dest_changes = utils.get_diff_of_versioned_objects(dest_objects,
-                                                           ancestor_objects)
+        diff = SimpleVersionDiff(ancestor_version, source_version)
+        source_changes = diff.compute()
 
-        source_ids_changed = ((k for k in source_changes["changed"])
-                              .union((k for k in source_changes["added"]))
-                              .union((k for k in source_changes["removed"])))
-        dest_ids_changed = ((k for k in dest_changes["changed"])
-                            .union((k for k in dest_changes["added"]))
-                            .union((k for k in dest_changes["removed"])))
+        diff = SimpleVersionDiff(ancestor_version, dest_version)
+        dest_changes = diff.compute()
+
+        source_ids_changed = (set(k for k in source_changes.changed)
+                              .union(set(k for k in source_changes.added))
+                              .union(set(k for k in source_changes.removed)))
+        dest_ids_changed = (set(k for k in dest_changes.changed)
+                            .union(set(k for k in dest_changes.added))
+                            .union(set(k for k in dest_changes.removed)))
 
         conflicts = source_ids_changed.intersection(dest_ids_changed)
         if len(conflicts) > 0:
@@ -390,35 +384,35 @@ class MergeBranchesCommand:
             print("Forgive me for not being able to resolve them right now...")
             return
 
-        objects = ((k for k in source_objects)
-                   .intersection((k for k in dest_objects)))
 
-        # Given that no conflicts exist I can do the following
-        objects = objects.union((k["new_id"]
-                                 for k in source_changes["changed"].values()))
-        objects = objects.union((k["new_id"]
-                                 for k in dest_changes["changed"].values()))
-        objects = objects.union((k["new_id"]
-                                 for k in source_changes["added"].values()))
-        objects = objects.union((k["new_id"]
-                                 for k in dest_changes["added"].values()))
-
-        objects = list(objects)
-
-        new_version = {
+        new_version = cjv.Version(vcm.versioning, {
             "author": self._author,
             "date": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             "message": "Merge {} to {}".format(source_branch, dest_branch),
-            "parents": [source_version, dest_version],
-            "objects": objects
-        }
+            "parents": [source_version.name, dest_version.name],
+            "objects": {}
+        })
 
-        new_versionid = utils.get_hash_of_object(new_version)
+        objects = (set(k for k in source_version.versioned_objects)
+                   .intersection(set(k for k in dest_version.versioned_objects)))
 
-        vcm["versioning"]["versions"][new_versionid] = new_version
+        for obj in objects:
+            new_version.add_cityobject(obj)
+
+        for obj in source_changes.changed.values():
+            new_version.add_cityobject(obj["dest"])
+        for obj in dest_changes.changed.values():
+            new_version.add_cityobject(obj["dest"])
+        for obj in source_changes.added.values():
+            new_version.add_cityobject(obj)
+        for obj in dest_changes.added.values():
+            new_version.add_cityobject(obj)
+
+        new_version.name = new_version.hash()
+        vcm.versioning.add_version(new_version)
 
         if utils.is_ref_branch(dest_branch, vcm["versioning"]):
-            vcm["versioning"]["branches"][dest_branch] = new_versionid
+            vcm["versioning"]["branches"][dest_branch] = new_version.name
 
         print("Saving to {0}...".format(self._output_file))
-        utils.save_cityjson(vcm, self._output_file)
+        utils.save_cityjson(vcm.data, self._output_file)
