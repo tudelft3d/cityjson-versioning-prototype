@@ -136,7 +136,7 @@ class Version(Hashable):
         if data is None:
             self._json = {
                 "objects": {}
-            }
+            }.copy()
         elif isinstance(data["objects"], list):
             raise Exception("This is an old versioning file!")
         else:
@@ -198,7 +198,10 @@ class Version(Hashable):
 
     def add_parent(self, value: 'Version'):
         """Adds a parent version to this version."""
-        self._json["parents"].append(value.name)
+        if "parents" not in self._json:
+            self._json["parents"] = [value.name]
+        else:
+            self._json["parents"].append(value.name)
 
     @property
     def versioned_objects(self) -> List['VersionedCityObject']:

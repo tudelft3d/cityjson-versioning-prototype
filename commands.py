@@ -251,7 +251,8 @@ class CommitCommand:
                 return
 
             result.print()
-            new_version.add_parent(parent_versionid)
+            new_version.add_parent(parent_version)
+        new_version.name = new_version.hash()
         vcm.versioning.add_version(new_version)
 
         if (vcm.versioning.is_branch(self._ref) or
