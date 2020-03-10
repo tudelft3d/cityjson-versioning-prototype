@@ -1,18 +1,22 @@
-import os.path
-import click
-import json
-import sys
+"""Main module that defines the cjv command-line logic."""
+
 import commands
-import utils
+import os.path
+import sys
+
+import click
+# Code to have colors at the console output
+from colorama import Fore, init
 
 from cityjson.versioning import VersionedCityJSON
 
-# Code to have colors at the console output
-from colorama import init, Fore, Back, Style
 init()
 
-#-- https://stackoverflow.com/questions/47437472/in-python-click-how-do-i-see-help-for-subcommands-whose-parents-have-required
 class PerCommandArgWantSubCmdHelp(click.Argument):
+    """Class to allow for the use of '--help' with any command.
+
+    https://stackoverflow.com/questions/47437472/in-python-click-how-do-i-see-help-for-subcommands-whose-parents-have-required
+    """
     def handle_parse_result(self, ctx, opts, args):
         # check to see if there is a --help on the command line
         if any(arg in ctx.help_option_names for arg in args):
@@ -58,10 +62,9 @@ def process_pipeline(processor, v_cityjson):
 @cli.command()
 @click.argument('refs', nargs=-1)
 @click.option('--graph', is_flag=True, help='show history as graph')
-@click.pass_context
-def log(context, refs, graph):
+def log(refs, graph):
     """Prints the history of a versioned CityJSON file.
-    
+
     REFs is a list of refs (ids, tags or branch names)
     """
     if len(refs) == 0:
@@ -74,12 +77,14 @@ def log(context, refs, graph):
 @cli.command()
 @click.argument('ref')
 @click.argument('output')
-@click.option('--objectid_property', default='cityobject_id', show_default=True, help='property name of the original city object id')
+@click.option('--objectid_property',
+              default='cityobject_id',
+              show_default=True,
+              help='property name of the original city object id')
 @click.option('--no_objectid', is_flag=True)
-@click.pass_context
-def checkout(context, ref, output, objectid_property, no_objectid):
+def checkout(ref, output, objectid_property, no_objectid):
     """Extract a version from a specific commit.
-    
+
     REF is a ref to a commit (id, tag or branch name).
     OUTPUT is the path of the output CityJSON."""
     def processor(citymodel):
@@ -93,8 +98,7 @@ def checkout(context, ref, output, objectid_property, no_objectid):
 @cli.command()
 @click.argument('dest_ref')
 @click.argument('source_ref')
-@click.pass_context
-def diff(context, dest_ref, source_ref):
+def diff(dest_ref, source_ref):
     """Show the differences between two commits."""
     def processor(citymodel):
         command = commands.DiffCommand(citymodel, dest_ref, source_ref)
@@ -107,7 +111,7 @@ def diff(context, dest_ref, source_ref):
 def rehash(context, output):
     """Recalculate all object and commit ids as hashes."""
     if output is None:
-        output=context.obj["filename"]
+        output = context.obj["filename"]
     def processor(citymodel):
         command = commands.RehashCommand(citymodel, output)
         command.execute()
@@ -121,7 +125,8 @@ def rehash(context, output):
 @click.option('-o', '--output')
 @click.pass_context
 def commit(context, new_version, ref, author, message, output):
-    """Add a new version to the history based on the NEW_VERSION CityJSON file."""
+    """Add a new version to the history based on the NEW_VERSION CityJSON file.
+    """
     if output is None:
         output = context.obj["filename"]
     if message is None:
@@ -130,7 +135,12 @@ def commit(context, new_version, ref, author, message, output):
             click.echo("No message provided. Doei!")
             quit()
     def processor(citymodel):
-        command = commands.CommitCommand(citymodel, new_version, ref, author, message, output)
+        command = commands.CommitCommand(citymodel,
+                                         new_version,
+                                         ref,
+                                         author,
+                                         message,
+                                         output)
         command.execute()
     return processor
 
