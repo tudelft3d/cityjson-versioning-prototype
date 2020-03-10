@@ -8,7 +8,6 @@ from typing import Dict, List
 
 from colorama import Fore, Style
 from cityjson.citymodel import CityJSON, CityObject
-import utils
 
 class Hashable(abc.ABC):
     """Abstract class that represents a hashable object."""

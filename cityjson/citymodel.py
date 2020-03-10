@@ -49,6 +49,11 @@ class CityJSON:
     def __contains__(self, item):
         return item in self._citymodel
 
+    def save(self, filename):
+        """Saves the CityJSON model in a file."""
+        with open(filename, "w") as outfile:
+            json.dump(self.data, outfile)
+
 class CityObjectDict:
     """Wrapper class for a dict of city objects."""
 

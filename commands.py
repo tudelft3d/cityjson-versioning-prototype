@@ -264,7 +264,7 @@ class CommitCommand:
             vcm.versioning.set_branch(self._ref, new_version)
 
         print("Saving to {0}...".format(self._output_file))
-        utils.save_cityjson(vcm.data, self._output_file)
+        vcm.save(self._output_file)
 
 class BranchCommand:
     """Class that creates a branch at a given ref"""
@@ -297,7 +297,7 @@ class BranchCommand:
 
         print("Saving file at {filename}...".format(filename=self._output_file))
 
-        utils.save_cityjson(vcm, self._output_file)
+        vcm.save(self._output_file)
 
         print("Done! Tot ziens.")
 
@@ -322,7 +322,7 @@ class BranchDeleteCommand:
 
         print("Saving file at {filename}...".format(filename=self._output_file))
 
-        utils.save_cityjson(vcm, self._output_file)
+        vcm.save(self._output_file)
 
         print("Done! Tot ziens.")
 
@@ -418,4 +418,4 @@ class MergeBranchesCommand:
             vcm.versioning.set_branch(dest_branch, new_version)
 
         print("Saving to {0}...".format(self._output_file))
-        utils.save_cityjson(vcm.data, self._output_file)
+        vcm.save(self._output_file)
