@@ -5,6 +5,8 @@ import sys
 import commands
 import utils
 
+from cityjson.versioning import VersionedCityJSON
+
 # Code to have colors at the console output
 from colorama import init, Fore, Back, Style
 init()
@@ -25,30 +27,31 @@ class PerCommandArgWantSubCmdHelp(click.Argument):
             ctx, opts, args)
 
 @click.group()
-@click.argument('input', cls=PerCommandArgWantSubCmdHelp)
+@click.argument('v_cityjson', cls=PerCommandArgWantSubCmdHelp)
 @click.pass_context
-def cli(context, input):
+def cli(context, v_cityjson):
     """A tool to create and manipulate versioned CityJSON
     files.
 
-    INPUT can be either a versioned CityJSON file or the word 'init'.
+    V_CITYJSON can be either a versioned CityJSON file or the word 'init'.
     """
 
-    context.obj = {"filename": input}
+    context.obj = {"filename": v_cityjson}
 
 @cli.resultcallback()
-def process_pipeline(processor, input):
-    if input == "init":
-        citymodel = utils.create_vcityjson()
+def process_pipeline(processor, v_cityjson):
+    """Process the input versioned CityJSON file."""
+    if v_cityjson == "init":
+        citymodel = VersionedCityJSON()
     else:
-        if not os.path.isfile(input):
+        if not os.path.isfile(v_cityjson):
             click.echo(Fore.RED + "ERROR: This file does not exist!")
-            quit()
-        citymodel = utils.load_cityjson(input)
-    
+            sys.exit()
+        citymodel = VersionedCityJSON.from_file(v_cityjson)
+
     if "versioning" not in citymodel:
         print(Fore.RED + "The file provided is not a versioned CityJSON!")
-        quit()
+        sys.exit()
 
     processor(citymodel)
 
@@ -64,9 +67,7 @@ def log(context, refs, graph):
     if len(refs) == 0:
         refs = ["master"]
     def processor(citymodel):
-        vcm = citymodel
-
-        command = commands.LogCommand(vcm, refs, graph)
+        command = commands.LogCommand(citymodel, refs, graph)
         command.execute()
     return processor
 
@@ -141,9 +142,9 @@ def commit(context, new_version, ref, author, message, output):
 @click.pass_context
 def branch(context, delete, branch, ref, output):
     """Create or delete branches.
-    
+
     BRANCH is the name of the branch.
-    
+
     REF will be used as base if a branch is
     created (default is 'master', if not provided)
     """
@@ -156,7 +157,7 @@ def branch(context, delete, branch, ref, output):
     def create_processor(citymodel):
         command = commands.BranchCommand(citymodel, ref, branch, output)
         command.execute()
-    
+
     if delete:
         return delete_processor
     else:
@@ -164,7 +165,7 @@ def branch(context, delete, branch, ref, output):
 
 @cli.command()
 @click.argument('source_branch')
-@click.argument('dest_branch', default = 'master')
+@click.argument('dest_branch', default='master')
 @click.option('-a', '--author', prompt='Provide your name', help='name of the author')
 @click.option('-o', '--output')
 @click.pass_context
@@ -186,5 +187,5 @@ def merge(context, source_branch, dest_branch, author, output):
                                                 author,
                                                 output)
         command.execute()
-    
+
     return processor

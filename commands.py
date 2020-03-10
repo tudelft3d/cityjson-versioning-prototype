@@ -26,8 +26,8 @@ minimal_json = {
 class LogCommand:
     """Class that implements the log command."""
 
-    def __init__(self, citymodel, refs, graph=False):
-        self._citymodel = VersionedCityJSON(citymodel)
+    def __init__(self, citymodel: 'VersionedCityJSON', refs, graph=False):
+        self._citymodel = citymodel
         self._refs = refs
         self._graph = graph
 
@@ -61,8 +61,8 @@ class LogCommand:
 class CheckoutCommand:
     """Class that implements the checkout command."""
 
-    def __init__(self, citymodel, version_name, output_file):
-        self._citymodel = VersionedCityJSON(citymodel)
+    def __init__(self, citymodel: 'VersionedCityJSON', version_name, output_file):
+        self._citymodel = citymodel
         self._version = version_name
         self._output = output_file
         self._objectid_property = "cityobject_id"
@@ -99,8 +99,8 @@ class CheckoutCommand:
 class DiffCommand:
     """Class that implements the diff command."""
 
-    def __init__(self, citymodel, new_version, old_version):
-        self._citymodel = VersionedCityJSON(citymodel)
+    def __init__(self, citymodel: 'VersionedCityJSON', new_version, old_version):
+        self._citymodel = citymodel
         self._new_version = new_version
         self._old_version = old_version
 
@@ -126,8 +126,8 @@ class DiffCommand:
 class RehashCommand:
     """Class that implements the rehash command."""
 
-    def __init__(self, citymodel, output_file):
-        self._citymodel = VersionedCityJSON(citymodel)
+    def __init__(self, citymodel: 'VersionedCityJSON', output_file):
+        self._citymodel = citymodel
         self._output = output_file
 
     def execute(self):
@@ -200,8 +200,8 @@ class RehashCommand:
 class CommitCommand:
     """Class that implements the commit command."""
 
-    def __init__(self, vcitymodel, in_file, ref, author, message, output_file):
-        self._vcitymodel = VersionedCityJSON(vcitymodel)
+    def __init__(self, vcitymodel: 'VersionedCityJSON', in_file, ref, author, message, output_file):
+        self._vcitymodel = vcitymodel
         self._input_file = in_file
         self._ref = ref
         self._author = author
@@ -217,7 +217,7 @@ class CommitCommand:
         if len(vcm.versioning.versions) > 0:
             parent_versionid = vcm.versioning.resolve_ref(self._ref)
 
-        new_citymodel = cjm.CityJSON(in_file)
+        new_citymodel = cjm.CityJSON.from_file(in_file)
 
         print("Appending vertices...")
         offset = len(vcm.data["vertices"])
@@ -269,7 +269,7 @@ class CommitCommand:
 class BranchCommand:
     """Class that creates a branch at a given ref"""
 
-    def __init__(self, citymodel, ref, branch_name, output_file):
+    def __init__(self, citymodel: 'VersionedCityJSON', ref, branch_name, output_file):
         self._citymodel = citymodel
         self._ref = ref
         self._branch_name = branch_name
@@ -304,7 +304,7 @@ class BranchCommand:
 class BranchDeleteCommand:
     """Class that deletes a branch"""
 
-    def __init__(self, citymodel, branch_name, output_file):
+    def __init__(self, citymodel: 'VersionedCityJSON', branch_name, output_file):
         self._citymodel = citymodel
         self._branch_name = branch_name
         self._output_file = output_file
@@ -329,7 +329,7 @@ class BranchDeleteCommand:
 class MergeBranchesCommand:
     """Class that merges two branches"""
 
-    def __init__(self, citymodel, source_branch, dest_branch, author, output):
+    def __init__(self, citymodel: 'VersionedCityJSON', source_branch, dest_branch, author, output):
         self._citymodel = VersionedCityJSON(citymodel)
         self._source_branch = source_branch
         self._dest_branch = dest_branch

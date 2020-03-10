@@ -7,22 +7,25 @@ import utils
 class CityJSON:
     """Class that represents a CityJSON city model."""
 
-    def __init__(self, file=None):
-        if file is None:
+    def __init__(self, data: dict = None):
+        if data is None:
             self._citymodel = utils.create_vcityjson()
-        elif isinstance(file, str):
-            cityjson_data = open(file)
-            try:
-                citymodel = json.load(cityjson_data)
-            except:
-                raise TypeError("Not a JSON file!")
-            cityjson_data.close()
-
-            self._citymodel = citymodel
-        elif isinstance(file, dict):
-            self._citymodel = file
+        elif isinstance(data, dict):
+            self._citymodel = data
         else:
             raise TypeError("Not a file or a dictionary.")
+
+    @classmethod
+    def from_file(cls, filename: str):
+        """Loads a CityJSON from a given file."""
+        cityjson_data = open(filename)
+        try:
+            citymodel = json.load(cityjson_data)
+        except:
+            raise TypeError("Not a JSON file!")
+        cityjson_data.close()
+
+        return cls(citymodel)
 
     @property
     def data(self):
