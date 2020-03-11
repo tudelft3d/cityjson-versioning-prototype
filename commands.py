@@ -200,24 +200,21 @@ class RehashCommand:
 class CommitCommand:
     """Class that implements the commit command."""
 
-    def __init__(self, vcitymodel: 'VersionedCityJSON', in_file, ref, author, message, output_file):
+    def __init__(self, vcitymodel: 'VersionedCityJSON', new_citymodel, ref, author, message):
         self._vcitymodel = vcitymodel
-        self._input_file = in_file
+        self._new_citymodel = new_citymodel
         self._ref = ref
         self._author = author
         self._message = message
-        self._output_file = output_file
 
     def execute(self):
         """Executes the commit command"""
         vcm = self._vcitymodel
-        in_file = self._input_file
+        new_citymodel = self._new_citymodel
 
         parent_versionid = None
         if len(vcm.versioning.versions) > 0:
             parent_versionid = vcm.versioning.resolve_ref(self._ref)
-
-        new_citymodel = cjm.CityJSON.from_file(in_file)
 
         print("Appending vertices...")
         offset = len(vcm.data["vertices"])
@@ -262,9 +259,6 @@ class CommitCommand:
             print("Updating {branch} to {id}".format(branch=self._ref,
                                                      id=new_version.name))
             vcm.versioning.set_branch(self._ref, new_version)
-
-        print("Saving to {0}...".format(self._output_file))
-        vcm.save(self._output_file)
 
 class BranchCommand:
     """Class that creates a branch at a given ref"""

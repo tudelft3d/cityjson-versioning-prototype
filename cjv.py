@@ -5,12 +5,9 @@ import os.path
 import sys
 
 import click
-# Code to have colors at the console output
-from colorama import Fore, init
 
 from cityjson.versioning import VersionedCityJSON
-
-init()
+from cityjson.citymodel import CityJSON
 
 class PerCommandArgWantSubCmdHelp(click.Argument):
     """Class to allow for the use of '--help' with any command.
@@ -49,12 +46,12 @@ def process_pipeline(processor, v_cityjson):
         citymodel = VersionedCityJSON()
     else:
         if not os.path.isfile(v_cityjson):
-            click.echo(Fore.RED + "ERROR: This file does not exist!")
+            click.secho("ERROR: This file does not exist!", fg="red")
             sys.exit()
         citymodel = VersionedCityJSON.from_file(v_cityjson)
 
     if "versioning" not in citymodel:
-        print(Fore.RED + "The file provided is not a versioned CityJSON!")
+        click.secho("The file provided is not a versioned CityJSON!", fg="red")
         sys.exit()
 
     processor(citymodel)
@@ -134,14 +131,17 @@ def commit(context, new_version, ref, author, message, output):
         if message is None:
             click.echo("No message provided. Doei!")
             quit()
+    new_citymodel = CityJSON.from_file(new_version)
     def processor(citymodel):
         command = commands.CommitCommand(citymodel,
-                                         new_version,
+                                         new_citymodel,
                                          ref,
                                          author,
-                                         message,
-                                         output)
+                                         message)
         command.execute()
+
+        click.echo("Saving {}...".format(output))
+        citymodel.save(output)
     return processor
 
 @cli.command()
@@ -190,12 +190,14 @@ def merge(context, source_branch, dest_branch, author, output):
     if output is None:
         output = context.obj["filename"]
 
-    def processor(citymodel):
+    def processor(citymodel: 'VersionedCityJSON'):
         command = commands.MergeBranchesCommand(citymodel,
                                                 source_branch,
                                                 dest_branch,
                                                 author,
                                                 output)
         command.execute()
+
+        citymodel.save(output)
 
     return processor
