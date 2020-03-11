@@ -147,7 +147,8 @@ class TestSimpleVersionDiff:
 
     def test_dummy_data(self):
         """Are changes in the dummy file detected correctly?"""
-        cm = cjv.VersionedCityJSON("Examples/dummy/buildingBeforeAndAfter.json")
+        cm = (cjv.VersionedCityJSON
+              .from_file("Examples/dummy/buildingBeforeAndAfter.json"))
         v30 = cm.versioning.get_version("v30")
         v29 = cm.versioning.get_version("v29")
 
