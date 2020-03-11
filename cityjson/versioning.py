@@ -47,7 +47,7 @@ class VersionedCityJSON(CityJSON):
         if data is None:
             self._citymodel = empty_vcityjson.copy()
         else:
-            super(VersionedCityJSON).__init__(data)
+            super(VersionedCityJSON, self).__init__(data)
 
     @property
     def versioning(self):
