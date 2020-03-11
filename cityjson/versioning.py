@@ -9,6 +9,21 @@ from typing import Dict, List
 from colorama import Fore, Style
 from cityjson.citymodel import CityJSON, CityObject
 
+empty_vcityjson = {
+    "type": "CityJSON",
+    "version": "1.0",
+    "CityObjects": {
+    },
+    "versioning": {
+        "versions": {},
+        "tags": {},
+        "branches": {}
+    },
+    "vertices": [],
+    "appearance": {},
+    "geometry-templates": {}
+}
+
 class Hashable(abc.ABC):
     """Abstract class that represents a hashable object."""
 
@@ -27,6 +42,12 @@ class Hashable(abc.ABC):
 
 class VersionedCityJSON(CityJSON):
     """Class that represents a versioned CityJSON file."""
+
+    def __init__(self, data: dict = None):
+        if data is None:
+            self._citymodel = empty_vcityjson.copy()
+        else:
+            super(VersionedCityJSON).__init__(data)
 
     @property
     def versioning(self):

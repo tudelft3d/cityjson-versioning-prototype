@@ -2,18 +2,25 @@
 
 import json
 
-import utils
+min_cityjson = {
+    "type": "CityJSON",
+    "version": "1.0",
+    "extensions": {},
+    "metadata": {},
+    "CityObjects": {},
+    "vertices": []
+}
 
 class CityJSON:
     """Class that represents a CityJSON city model."""
 
     def __init__(self, data: dict = None):
         if data is None:
-            self._citymodel = utils.create_vcityjson()
+            self._citymodel = min_cityjson.copy()
         elif isinstance(data, dict):
             self._citymodel = data
         else:
-            raise TypeError("Not a file or a dictionary.")
+            raise TypeError("Not a dictionary.")
 
     @classmethod
     def from_file(cls, filename: str):

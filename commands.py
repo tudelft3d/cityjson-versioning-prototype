@@ -15,14 +15,6 @@ import cityjson.citymodel as cjm
 
 init()
 
-minimal_json = {
-    "type": "CityJSON",
-    "version": "1.0",
-    "extensions": {},
-    "metadata": {},
-    "CityObjects": {}
-}
-
 class LogCommand:
     """Class that implements the log command."""
 

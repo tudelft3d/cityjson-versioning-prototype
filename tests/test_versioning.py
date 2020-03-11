@@ -3,6 +3,17 @@ import cityjson.versioning as cjv
 import cityjson.citymodel as cjm
 from utils import get_hash_of_object
 
+class TestVersionedCityJSON:
+    """Test the VersionedCityJSON class."""
+
+    def test_create_empty_vcityjson(self):
+        """Initialising a VersionedCityJSON without arguments should return
+        minimal versioned CityJSON.
+        """
+        vcm = cjv.VersionedCityJSON()
+
+        assert vcm.data == cjv.empty_vcityjson
+
 class TestVersion:
     """Tests the Version class."""
 

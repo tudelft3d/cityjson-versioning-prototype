@@ -11,3 +11,11 @@ class TestCityJSON:
 
         assert cm["version"] == "1.0"
         print(cm.cityobjects)
+
+    def test_empty_cityjson(self):
+        """Initialising CityJSON without arguments should return minimal
+        CityJSON.
+        """
+
+        cm = citymodel.CityJSON()
+        assert cm.data == citymodel.min_cityjson
