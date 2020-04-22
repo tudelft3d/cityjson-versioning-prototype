@@ -316,7 +316,7 @@ class MergeBranchesCommand:
     """Class that merges two branches"""
 
     def __init__(self, citymodel: 'VersionedCityJSON', source_branch, dest_branch, author, output):
-        self._citymodel = VersionedCityJSON(citymodel)
+        self._citymodel = citymodel
         self._source_branch = source_branch
         self._dest_branch = dest_branch
         self._author = author
