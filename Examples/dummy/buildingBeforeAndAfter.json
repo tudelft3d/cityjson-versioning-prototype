@@ -88,7 +88,7 @@
       "release-2019": "v29"
     },
     "branches": {
-      "master": "v30",
+      "main": "v30",
       "one-branch": "branch-version"
     }
   },
