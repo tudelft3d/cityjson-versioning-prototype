@@ -65,7 +65,7 @@ def log(refs, graph):
     REFs is a list of refs (ids, tags or branch names)
     """
     if len(refs) == 0:
-        refs = ["master"]
+        refs = ["main"]
     def processor(citymodel):
         command = commands.LogCommand(citymodel, refs, graph)
         command.execute()
@@ -116,7 +116,7 @@ def rehash(context, output):
 
 @cli.command()
 @click.argument('new_version')
-@click.argument('ref', required=False, default='master')
+@click.argument('ref', required=False, default='main')
 @click.option('-a', '--author', prompt='Provide your name', help='name of the author')
 @click.option('-m', '--message', help='decsription of the changes')
 @click.option('-o', '--output')
@@ -147,7 +147,7 @@ def commit(context, new_version, ref, author, message, output):
 @cli.command()
 @click.option('-d', '--delete', is_flag=True, help="delete the branch")
 @click.argument('branch')
-@click.argument('ref', default='master', required=False)
+@click.argument('ref', default='main', required=False)
 @click.option('-o', '--output')
 @click.pass_context
 def branch(context, delete, branch, ref, output):
@@ -156,7 +156,7 @@ def branch(context, delete, branch, ref, output):
     BRANCH is the name of the branch.
 
     REF will be used as base if a branch is
-    created (default is 'master', if not provided)
+    created (default is 'main', if not provided)
     """
     if output is None:
         output = context.obj["filename"]
@@ -175,7 +175,7 @@ def branch(context, delete, branch, ref, output):
 
 @cli.command()
 @click.argument('source_branch')
-@click.argument('dest_branch', default='master')
+@click.argument('dest_branch', default = 'main')
 @click.option('-a', '--author', prompt='Provide your name', help='name of the author')
 @click.option('-o', '--output')
 @click.pass_context
@@ -185,7 +185,7 @@ def merge(context, source_branch, dest_branch, author, output):
     SOURCE_BRANCH is the branch to merge.
 
     DEST_BRANCH is the branch to get the changes
-    of SOURCE_BRANCH (default is 'master')
+    of SOURCE_BRANCH (default is 'main')
     """
     if output is None:
         output = context.obj["filename"]
