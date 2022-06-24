@@ -39,7 +39,7 @@ def cli(context, v_cityjson):
 
     context.obj = {"filename": v_cityjson}
 
-@cli.resultcallback()
+@cli.result_callback()
 def process_pipeline(processor, v_cityjson):
     """Process the input versioned CityJSON file."""
     if v_cityjson == "init":
