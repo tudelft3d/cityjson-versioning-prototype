@@ -27,7 +27,7 @@ class TestCityJSON:
 
         # This is hacky. You shouldn't update vertices manually and then prepare
         # the cache yourself, but it's only done for testing purposes here.
-        cm["vertices"] = [[1000.001, 1000.001, 1000.001],
+        cm["vertices"] = [[1001, 1001, 1001],
                           [1002, 1002, 1002],
                           [1003, 1003, 1003],
                           [1004, 1004, 1004]]
@@ -36,7 +36,7 @@ class TestCityJSON:
         cm.set_transform([1000, 1000, 1000], [0.001, 0.001, 0.001])
 
         assert len(cm["vertices"]) == 4
-        assert cm["vertices"][0] == [1, 1, 1]
+        assert cm["vertices"][0] == [1000, 1000, 1000]
         assert cm["vertices"][1] == [2000, 2000, 2000]
 
 class TestIndexedVerticesHandler:
