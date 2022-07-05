@@ -201,3 +201,6 @@ def merge(context, source_branch, dest_branch, author, output):
         citymodel.save(output)
 
     return processor
+
+if __name__ == "__main__":
+    cli()
