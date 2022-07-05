@@ -331,6 +331,11 @@ class MergeBranchesCommand:
         source_version = vcm.versioning.get_version(source_branch)
         dest_version = vcm.versioning.get_version(dest_branch)
 
+        if source_version.name == dest_version.name:
+            print("This is the same version. Nothing to do here...")
+            return
+
+        # Build a DAG that contains the two given refs
         history = History(vcm)
         history.add_versions(source_version.name)
         history.add_versions(dest_version.name)
