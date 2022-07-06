@@ -290,10 +290,16 @@ class VersionedCityObject(Hashable):
             self._name = name
 
     def __eq__(self, obj):
-        return self.hash() == obj.hash()
+        return self.__hash__() == obj.__hash__()
 
     def __hash__(self):
-        return int(self.hash(), 16)
+        content = {'coid': self.original_cityobject.name ,'hash': self.hash()}
+        encoded = json.dumps(content).encode('utf-8')
+        m = hashlib.new('sha1')
+        m.update(encoded)
+
+        h = m.hexdigest()
+        return int(h, 16)
 
     @property
     def original_cityobject(self) -> 'CityObject':
