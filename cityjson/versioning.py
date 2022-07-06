@@ -384,10 +384,10 @@ class VersionsDiffResult:
         if len(self.changed) > 0:
             print("{color}".format(color=Fore.BLUE), end='')
             for obj_name, objs in self.changed.items():
-                print("\tchanged: {id} ({old_hash} -> {new_hash})"
-                      .format(id=obj_name,
-                              old_hash=trim_string(objs["source"].name),
-                              new_hash=trim_string(objs["dest"].name)))
+                old_hash = trim_string(objs["source"].name)
+                new_hash = trim_string(objs["dest"].name)
+                print(f"\tchanged: {obj_name} ({old_hash} -> {new_hash})")
+
         if len(self.added) > 0:
             print("{color}".format(color=Fore.GREEN), end='')
             for obj_name, obj in self.added.items():
@@ -406,6 +406,6 @@ class VersionsDiffResult:
 def trim_string(text, width=15, suffix=".."):
     """Trims a string at the given width."""
     if len(text) > width:
-        return "{text}{suffix}".format(text=text[:width], suffix=suffix)
+        return f"{text[:width]}{suffix}"
 
     return text

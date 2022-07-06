@@ -9,11 +9,11 @@ from colorama import Fore, Style, init
 
 import utils
 from graph import GraphHistoryLog, History, SimpleHistoryLog
-from cityjson.versioning import VersionedCityJSON, SimpleVersionDiff
+from cityjson.versioning import VersionedCityJSON, SimpleVersionDiff, VersionedCityObject
 import cityjson.versioning as cjv
 import cityjson.citymodel as cjm
 
-from deepdiff import DeepDiff
+from deepdiff import DeepDiff, Delta
 
 init()
 
@@ -324,6 +324,14 @@ class MergeBranchesCommand:
         self._author = author
         self._output_file = output
 
+    @staticmethod
+    def is_conflict(diff1: DeepDiff, diff2: DeepDiff) -> bool:
+        """Returns true if the two diffs are actually conflicting"""
+        paths1 = set([path for cat in diff1.to_dict() for path in diff1[cat]])
+        paths2 = set([path for cat in diff2.to_dict() for path in diff2[cat]])
+
+        return len(paths1.intersection(paths2)) > 0
+
     def execute(self):
         """Executers the merge command."""
         vcm = self._citymodel
@@ -371,18 +379,42 @@ class MergeBranchesCommand:
                             .union(set(k for k in dest_changes.added))
                             .union(set(k for k in dest_changes.removed)))
 
+        # Compute candidate conflicts
         conflicts = source_ids_changed.intersection(dest_ids_changed)
+
+        # Remove changes that aren't conflicts
+        both_changed = (set(k for k in source_changes.changed)
+                        .intersection(set(k for k in dest_changes.changed)))
+
+        resolved = {}
+        for co_id in both_changed:
+            common_obj = source_changes.changed[co_id]["source"].data
+            left_dest = source_changes.changed[co_id]["dest"].data
+            right_dest = dest_changes.changed[co_id]["dest"].data
+
+            left_diff = DeepDiff(common_obj, left_dest)
+            right_diff = DeepDiff(common_obj, right_dest)
+
+            if not self.is_conflict(left_diff, right_diff):
+                # print(f"Conflicts on {co_id} can be resolved...")
+                conflicts.remove(co_id)
+
+                delta = Delta(left_diff)
+                new_obj = common_obj + delta
+
+                delta = Delta(right_diff)
+                new_obj = new_obj + delta
+
+                new_versioned_obj = VersionedCityObject(cjm.CityObject(new_obj, name=co_id))
+                resolved[co_id] = new_versioned_obj
+
         if len(conflicts) > 0:
             print("There are conflicts!")
 
-            both_changed = (set(k for k in source_changes.changed)
-                            .intersection(set(k for k in dest_changes.changed)))
-
             for c in conflicts:
-                print("- {}".format(c))
+                print(f"- {c}")
             print("Forgive me for not being able to resolve them right now...")
             return
-
 
         new_version = cjv.Version(vcm.versioning, {
             "author": self._author,
@@ -398,13 +430,18 @@ class MergeBranchesCommand:
         for obj in objects:
             new_version.add_cityobject(obj)
 
-        for obj in source_changes.changed.values():
-            new_version.add_cityobject(obj["dest"])
-        for obj in dest_changes.changed.values():
-            new_version.add_cityobject(obj["dest"])
+        for co_id, obj in source_changes.changed.items():
+            if not co_id in resolved:
+                new_version.add_cityobject(obj["dest"])
+        for co_id, obj in dest_changes.changed.items():
+            if not co_id in resolved:
+                new_version.add_cityobject(obj["dest"])
         for obj in source_changes.added.values():
             new_version.add_cityobject(obj)
         for obj in dest_changes.added.values():
+            new_version.add_cityobject(obj)
+        
+        for obj in resolved.values():
             new_version.add_cityobject(obj)
 
         new_version.name = new_version.hash()
