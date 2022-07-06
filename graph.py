@@ -5,7 +5,7 @@ from colorama import Fore, Style
 from cityjson.versioning import VersionedCityJSON
 
 class History:
-    """Class to represent the history of versions of a versioned city model"""
+    """Class to represent the history of versions of a versioned city model."""
 
     def __init__(self, citymodel: VersionedCityJSON):
         self._citymodel = citymodel

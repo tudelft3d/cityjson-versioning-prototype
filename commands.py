@@ -13,6 +13,8 @@ from cityjson.versioning import VersionedCityJSON, SimpleVersionDiff
 import cityjson.versioning as cjv
 import cityjson.citymodel as cjm
 
+from deepdiff import DeepDiff
+
 init()
 
 class LogCommand:
@@ -372,6 +374,10 @@ class MergeBranchesCommand:
         conflicts = source_ids_changed.intersection(dest_ids_changed)
         if len(conflicts) > 0:
             print("There are conflicts!")
+
+            both_changed = (set(k for k in source_changes.changed)
+                            .intersection(set(k for k in dest_changes.changed)))
+
             for c in conflicts:
                 print("- {}".format(c))
             print("Forgive me for not being able to resolve them right now...")

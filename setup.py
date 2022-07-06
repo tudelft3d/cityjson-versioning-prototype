@@ -7,7 +7,8 @@ setup(
     install_requires=[
         'Click',
         'colorama',
-        'networkx'
+        'networkx',
+        'deepdiff'
     ],
     entry_points='''
         [console_scripts]
