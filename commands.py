@@ -77,7 +77,7 @@ class CheckoutCommand:
             print("Oh no! '{}' does not exist...".format(version.name))
             quit()
 
-        new_model = minimal_json
+        new_model = cjm.min_cityjson.copy()
         print("Extracting version '%s'..." % version.name)
         new_objects = version.versioned_objects
 

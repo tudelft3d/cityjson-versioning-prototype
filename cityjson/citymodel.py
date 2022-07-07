@@ -4,7 +4,7 @@ import json
 
 min_cityjson = {
     "type": "CityJSON",
-    "version": "1.0",
+    "version": "1.1",
     "extensions": {},
     "metadata": {},
     "CityObjects": {},
