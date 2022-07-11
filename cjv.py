@@ -150,7 +150,7 @@ def commit(context, new_version, ref, author, message, output):
 @click.argument('ref', default='main', required=False)
 @click.option('-o', '--output')
 @click.pass_context
-def branch(context, delete, branch, ref, output):
+def branch(context, delete, branch_name, ref, output):
     """Create or delete branches.
 
     BRANCH is the name of the branch.
@@ -162,10 +162,10 @@ def branch(context, delete, branch, ref, output):
         output = context.obj["filename"]
 
     def delete_processor(citymodel):
-        command = commands.BranchDeleteCommand(citymodel, branch, output)
+        command = commands.BranchDeleteCommand(citymodel, branch_name, output)
         command.execute()
     def create_processor(citymodel):
-        command = commands.BranchCommand(citymodel, ref, branch, output)
+        command = commands.BranchCommand(citymodel, ref, branch_name, output)
         command.execute()
 
     if delete:
