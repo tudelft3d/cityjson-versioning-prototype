@@ -1,5 +1,6 @@
 """Main module that defines the cjv command-line logic."""
 
+from matplotlib.style import context
 import commands
 import os.path
 import sys
@@ -144,7 +145,21 @@ def commit(context, new_version, ref, author, message, output):
         citymodel.save(output)
     return processor
 
+def print_branches(ctx, param, value):
+    """Lists the branches available in the file"""
+    def list_processor(citymodel):
+        click.echo("The following branches are available:")
+
+        for b in citymodel.versioning.branches:
+            click.echo(f"- {b}")
+
+    process_pipeline(list_processor, ctx.obj["filename"])
+
+    ctx.exit()
+
 @cli.command()
+@click.option('-v', '--list', is_flag=True, callback=print_branches, is_eager=True,
+              help="list all branches")
 @click.option('-d', '--delete', is_flag=True, help="delete the branch")
 @click.argument('branch')
 @click.argument('ref', default='main', required=False)
@@ -170,6 +185,8 @@ def branch(context, delete, branch_name, ref, output):
 
     if delete:
         return delete_processor
+    elif list:
+        click.echo("Here are the branches:")
     else:
         return create_processor
 
