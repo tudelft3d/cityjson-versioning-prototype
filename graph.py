@@ -3,6 +3,9 @@
 import networkx as nx
 from colorama import Fore, Style
 from cityjson.versioning import VersionedCityJSON
+from rich.console import Console
+from rich.themes import Theme
+from rich.padding import Padding
 
 class History:
     """Class to represent the history of versions of a versioned city model."""
@@ -39,13 +42,13 @@ class SimpleHistoryLog:
     def __init__(self, history: 'History'):
         self._history = history
 
-        self._colors = {
-            "header": Fore.YELLOW,
-            "branch": Fore.CYAN,
-            "tag": Fore.MAGENTA,
-            "message": Fore.CYAN,
-            "main": Fore.WHITE
-        }
+        self._theme = Theme({
+            "header": "yellow",
+            "branch": "cyan",
+            "tag": "magenta",
+            "message": "white",
+            "main": "white"
+        })
 
     def print_all(self):
         """Prints the history as a list."""
@@ -57,40 +60,34 @@ class SimpleHistoryLog:
             version = self._history.citymodel.versioning.versions[version_name]
             self.print_version(version)
 
-    def print_version(self, version: 'Version'):
+    def print_version(self, version: 'Version', console=None):
         """Prints a given version."""
-        colors = self._colors
+        console = Console(theme=self._theme, highlight=False)
 
-        print(colors["header"], end='')
-        print("* version {name}".format(name=version.name), end='')
+        line = f"[header]version {version.name}"
 
         if len(version.branches) > 0:
-            branches_txt = self.get_refs_string(version.branches,
-                                                colors["branch"],
-                                                colors["header"])
-            print(' ({branches})'.format(branches=branches_txt), end='')
+            branches_txt = self.get_refs_string(version.branches, "branch")
+            line += f" ({branches_txt})"
 
         if len(version.tags) > 0:
-            tags_txt = self.get_refs_string(version.tags,
-                                            colors["tag"],
-                                            colors["header"])
-            print(' ({tags})'.format(tags=tags_txt), end='')
+            tags_txt = self.get_refs_string(version.tags, "tag")
+            line += f" ({tags_txt})"
 
-        print(colors["main"])
+        line += "[/header]"
 
-        print("  Author: {author}".format(author=version.author))
-        print("  Date: {date}".format(date=version.date))
+        console.print(Padding(line, (0, 0)))
 
-        msg = "  Message:\n\n{}\t{}{}".format(Fore.CYAN,
-                                              '\t'.join(version.message.splitlines(True)),
-                                              Style.RESET_ALL)
-        print(msg, end='\n\n')
+        console.print(f"{'Author:':<7} {version.author}")
+        console.print(f"{'Date:':<7} {version.date}")
 
-    def get_refs_string(self, refs, ref_color, reset_color):
+        msg = f"[message]{version.message}[/message]"
+
+        console.print(Padding(msg, (1, 4)))
+
+    def get_refs_string(self, refs, ref_type):
         """Returns a string with comma-seperated names of the refs."""
-        return ", ".join(["{}{}{}".format(ref_color,
-                                          ref,
-                                          reset_color)
+        return ", ".join([f"[{ref_type}]{ref}[/{ref_type}]"
                           for ref in refs])
 
 class GraphHistoryLog:
