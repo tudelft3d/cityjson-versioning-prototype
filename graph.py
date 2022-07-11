@@ -1,11 +1,12 @@
 """Module to manipulate history graphs for cjv."""
 
+from textwrap import fill, wrap, indent
+
 import networkx as nx
 from colorama import Fore, Style
 from rich.console import Console
 from rich.themes import Theme
 from rich.padding import Padding
-from textwrap import wrap
 
 from cityjson.versioning import VersionedCityJSON
 
@@ -22,7 +23,7 @@ class History:
 
         next_key = version_name
         next_ver = self._citymodel.versioning.versions[version_name]
-        G.add_node(next_key)
+        G.add_node(next_key, **next_ver.data)
         for parent in next_ver.parents:
             if not G.has_node(parent):
                 self.add_versions(parent.name)
@@ -109,6 +110,14 @@ class GraphHistoryLog:
             "main": Fore.WHITE
         }
 
+        self._theme = Theme({
+            "header": "yellow",
+            "branch": "cyan",
+            "tag": "magenta",
+            "message": "white",
+            "main": "white"
+        })
+
         self._all_branches = []
         self._active_branch = 0
         self._branches_shown = []
@@ -153,28 +162,87 @@ class GraphHistoryLog:
 
     def print_all(self):
         """Prints the history as a graph."""
+        def get_branch_lines(num_lines, num_empty_lines):
+            """
+            Returns the lines for the given branches
+            """
+            txt = num_lines * "| " + num_empty_lines * "  "
+
+            return txt
+
+        console = Console(theme = self._theme, highlight=False)
+
         cm = self._history.citymodel
 
         dag = self._history.dag
         sorted_keys = list(nx.topological_sort(dag))
         sorted_keys.reverse()
 
+        # Get the leafs of the graph
         leafs = [x for x in dag.nodes() if dag.out_degree(x) == 0]
 
-        self._all_branches = []
+        all_paths = []
         for leaf in leafs:
             version = cm.versioning.versions[leaf]
-            self._all_branches.extend(list(nx.shortest_simple_paths(dag,
-                                                                sorted_keys[-1],
-                                                                version.name)))
+            all_paths.extend(list(nx.shortest_simple_paths(dag,
+                                                           sorted_keys[-1],
+                                                           version.name)))
 
-        self._branches_shown = [self._all_branches[0]]
+        active_paths = [all_paths[0]]
         for version_name in sorted_keys:
-            self.update_status(version_name)
+            found = False
+            header_line = ""
 
-            current_version = cm.versioning.versions[version_name]
+            is_merge = dag.in_degree(version_name) > 1
+            is_fork = dag.out_degree(version_name) > 1
 
-            self.print_version(current_version)
+            if is_merge:
+                for path in all_paths:
+                    if version_name in path and path not in active_paths:
+                        active_paths.append(path)
+
+            width = len(active_paths)
+            empty_lines = 0
+
+            # Find to which branch this version belongs
+            for path in active_paths:
+                # TODO: This set of conditional branches is awful!
+                if version_name in path:
+                    if found:
+                        if not is_fork:
+                            header_line += "  "
+                            continue
+                    else:
+                        header_line += "* "
+                        found = True
+                        continue
+
+                header_line += "| "
+
+            header_line += f"[header]{version_name}[/header]"
+
+            console.print(header_line)
+
+            if is_merge:
+                console.print("|\\")
+            if is_fork:
+                console.print("|/")
+                width -= 1
+                empty_lines += 1
+            if not (is_merge or is_fork):
+                console.print("".join(["| " for _ in active_paths]))
+
+            lines = get_branch_lines(width, empty_lines)
+            console.print(indent(f"{'Author:':<7} {version.author}", lines))
+            console.print(indent(f"{'Date:':<7} {version.date}", lines))
+            console.print(lines)
+            msg = indent(fill(version.message, 70, initial_indent="[message]    ", subsequent_indent="[message]    "), lines)
+            console.print(msg)
+            console.print(lines)
+
+            # current_version = cm.versioning.versions[version_name]
+
+            # self.print_version(current_version)
 
     def print_version(self, version: 'Version'):
         """Prints a given version."""
