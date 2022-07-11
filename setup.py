@@ -8,7 +8,8 @@ setup(
         'Click',
         'colorama',
         'networkx',
-        'deepdiff'
+        'deepdiff',
+        'rich'
     ],
     entry_points='''
         [console_scripts]
