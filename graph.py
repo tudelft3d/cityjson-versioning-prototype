@@ -2,10 +2,12 @@
 
 import networkx as nx
 from colorama import Fore, Style
-from cityjson.versioning import VersionedCityJSON
 from rich.console import Console
 from rich.themes import Theme
 from rich.padding import Padding
+from textwrap import wrap
+
+from cityjson.versioning import VersionedCityJSON
 
 class History:
     """Class to represent the history of versions of a versioned city model."""
@@ -62,26 +64,29 @@ class SimpleHistoryLog:
 
     def print_version(self, version: 'Version', console=None):
         """Prints a given version."""
+        def text_wrap(text, width):
+            return '\n'.join(wrap(text, width))
+
         console = Console(theme=self._theme, highlight=False)
 
-        line = f"[header]version {version.name}"
+        header_line = f"[header]version {version.name}"
 
         if len(version.branches) > 0:
             branches_txt = self.get_refs_string(version.branches, "branch")
-            line += f" ({branches_txt})"
+            header_line += f" ({branches_txt})"
 
         if len(version.tags) > 0:
             tags_txt = self.get_refs_string(version.tags, "tag")
-            line += f" ({tags_txt})"
+            header_line += f" ({tags_txt})"
 
-        line += "[/header]"
+        header_line += "[/header]"
 
-        console.print(Padding(line, (0, 0)))
+        console.print(Padding(header_line, (0, 0)))
 
         console.print(f"{'Author:':<7} {version.author}")
         console.print(f"{'Date:':<7} {version.date}")
 
-        msg = f"[message]{version.message}[/message]"
+        msg = f"[message]{text_wrap(version.message, 70)}[/message]"
 
         console.print(Padding(msg, (1, 4)))
 
