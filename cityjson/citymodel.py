@@ -33,11 +33,11 @@ class CityJSON:
     @classmethod
     def from_file(cls, filename: str):
         """Loads a CityJSON from a given file."""
-        cityjson_data = open(filename)
+        cityjson_data = open(filename, encoding="UTF-8")
         try:
             citymodel = json.load(cityjson_data)
-        except:
-            raise TypeError("Not a JSON file!")
+        except Exception as exp:
+            raise TypeError("Not a JSON file!") from exp
         cityjson_data.close()
 
         return cls(citymodel)
@@ -83,7 +83,7 @@ class CityJSON:
 
     def save(self, filename):
         """Saves the CityJSON model in a file."""
-        with open(filename, "w") as outfile:
+        with open(filename, "w", encoding="UTF-8") as outfile:
             json.dump(self.data, outfile)
 
 class CityObjectDict:
