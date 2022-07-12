@@ -1,13 +1,14 @@
 """Main module that defines the cjv command-line logic."""
 
-import commands
 import os.path
 import sys
 
 import click
 
-from cityjson.versioning import VersionedCityJSON
+import commands
 from cityjson.citymodel import CityJSON
+from cityjson.versioning import VersionedCityJSON
+
 
 class PerCommandArgWantSubCmdHelp(click.Argument):
     """Class to allow for the use of '--help' with any command.
