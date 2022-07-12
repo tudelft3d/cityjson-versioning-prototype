@@ -1,6 +1,5 @@
 """Main module that defines the cjv command-line logic."""
 
-from matplotlib.style import context
 import commands
 import os.path
 import sys
