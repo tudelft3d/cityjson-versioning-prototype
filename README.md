@@ -41,7 +41,7 @@ cjv <command_name> --help
 The available commands are (a *ref* can be a *version*, *branch* or *tag*):
 
 ### ``log``
-Shows the history of the project starting from a ``ref`` (default is ``master``):
+Shows the history of the project starting from a ``ref`` (default is ``main``):
 
 ```
 cjv vCityJson.json log [<ref>]
@@ -73,7 +73,7 @@ Adds a new version from a CityJSON (``input.json``) with ``base_ref`` as parent:
 cjv vCityJson.json commit <input.json> [<base_ref>] [-a <author>] [-m <message>] [-o <output.json>]
 ```
 
-If a ``base_ref`` is not provided, then the ``master`` branch is implied.
+If a ``base_ref`` is not provided, then the ``main`` branch is implied.
 
 Available options:
 - `-a` or `--author`: name of the commit's author (if not provided, user will be prompted),
@@ -82,7 +82,7 @@ Available options:
 
 ### ``branch``
 
-Creates a branch at a given ``base_ref`` (default is ``master``):
+Creates a branch at a given ``base_ref`` (default is ``main``):
 
 ```
 cjv vCityJson.json branch <branch_name> [<base_ref>]
@@ -117,13 +117,13 @@ cjv vCityJson.json rehash <output.json>
 You can create a new versioned CityJSON using ``init`` and ``commit``:
 
 ```
-cjv init commit input_file.json master -a "John Doe" -m "Initial commit" -o new_vcityjson.json
+cjv init commit input_file.json main -a "John Doe" -m "Initial commit" -o new_vcityjson.json
 ```
 
-You can show the log of ``master`` branch:
+You can show the log of ``main`` branch:
 
 ```
-cjv Examples/buildingBeforeAndAfter.json log master
+cjv Examples/buildingBeforeAndAfter.json log main
 ```
 
 You can checkout a version to a regular CityJSON as follows:
@@ -148,7 +148,7 @@ Let's do this together. We have an example dataset from Rotterdam Delfshaven.
     cjv rotterdam.json branch test-branch
     ```
 
-3. Add the version with the moved roof in `master`:
+3. Add the version with the moved roof in `main`:
 
     ```
     cjv rotterdam.json commit Examples/rotterdam/inital_moved_roof.json -m "Move a building's roof"
@@ -163,19 +163,19 @@ Let's do this together. We have an example dataset from Rotterdam Delfshaven.
 5. You can check if everything is okay with:
 
     ```
-    cjv rotterdam.json log master test-branch --graph
+    cjv rotterdam.json log main test-branch --graph
     ```
 
-6. Merge `test-branch` into `master`:
+6. Merge `test-branch` into `main`:
 
     ```
-    cjv rotterdam.json merge test-branch master
+    cjv rotterdam.json merge test-branch main
     ```
 
 7. Checkout the merged version:
 
     ```
-    cjv rotterdam.json checkout master rotterdam_master.json
+    cjv rotterdam.json checkout main rotterdam_main.json
     ```
 
 8. Use the plethora of CityJSON viewers to investigate the new model. And submits the bugs you'll find as issues. :)
