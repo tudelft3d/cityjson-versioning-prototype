@@ -97,7 +97,7 @@ class Versioning:
         if ref in self._json["tags"]:
             return self._json["tags"][ref]
 
-        raise KeyError("Ref is not available in versioning.")
+        raise KeyError(f"Ref '{ref}' does not exist.")
 
     def is_branch(self, ref):
         """Returns True if the ref is a branch."""

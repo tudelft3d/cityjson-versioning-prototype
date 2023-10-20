@@ -158,12 +158,11 @@ def print_branches(ctx, param, value):
     ctx.exit()
 
 @cli.command()
-@click.option('-v', '--list', is_flag=True, callback=print_branches, is_eager=True,
-              help="list all branches")
 @click.option('-d', '--delete', is_flag=True, help="delete the branch")
-@click.argument('branch')
+@click.argument('branch_name')
 @click.argument('ref', default='main', required=False)
 @click.option('-o', '--output')
+@click.option('--list-branches', is_flag=True, help="list all branches")
 @click.pass_context
 def branch(context, delete, branch_name, ref, output):
     """Create or delete branches.
@@ -179,13 +178,14 @@ def branch(context, delete, branch_name, ref, output):
     def delete_processor(citymodel):
         command = commands.BranchDeleteCommand(citymodel, branch_name, output)
         command.execute()
+
     def create_processor(citymodel):
         command = commands.BranchCommand(citymodel, ref, branch_name, output)
         command.execute()
 
     if delete:
         return delete_processor
-    elif list:
+    elif list_branches:
         click.echo("Here are the branches:")
     else:
         return create_processor
