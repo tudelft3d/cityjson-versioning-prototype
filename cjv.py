@@ -164,7 +164,7 @@ def print_branches(ctx, param, value):
 @click.option('-o', '--output')
 @click.option('--list-branches', is_flag=True, help="list all branches")
 @click.pass_context
-def branch(context, delete, branch_name, ref, output):
+def branch(context, delete, list_branches, branch_name, ref, output):
     """Create or delete branches.
 
     BRANCH is the name of the branch.
